@@ -1,0 +1,44 @@
+{
+    "env_keys": {
+        "run_env": "RUN_MODE",
+        "env_string": ""
+    },
+    "loggers": [{
+        "name": "mike",
+        "config": {
+            "production": {
+                "level": "error",
+                "formatter": {
+                    "name": "json"
+                },
+                "hooks":{
+                	"syslog":{
+                		"network":"udp",
+                		"address":"localhost:514",
+                		"priority":"LOG_ERR",
+                		"tag":""
+                	},
+                	"bugsnag":{
+                		"api_key":""
+                	},
+                	"slack":{
+                		"url":"",
+                		"levels":["debug", "error", "info"],
+                		"channel":"",
+                		"emoji":":rag:",
+                		"username":"logrus_mate"
+                	},
+                	"mail":{
+                		"app_name":"logrus_example",
+                		"host":"smtp.xxx.com",
+                		"port":587,
+                		"from":"",
+                		"to":"",
+                		"username":"",
+                		"password":""
+                	}
+                }
+            }
+        }
+    }]
+}

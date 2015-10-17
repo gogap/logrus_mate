@@ -28,13 +28,20 @@ func NewSlackHook(options logrus_mate.Options) (hook logrus.Hook, err error) {
 
 	levels := []logrus.Level{}
 
-	for _, level := range conf.Levels {
-		if lv, e := logrus.ParseLevel(level); e != nil {
-			err = e
-			return
-		} else {
-			levels = append(levels, lv)
+	if conf.Levels != nil {
+		for _, level := range conf.Levels {
+			if lv, e := logrus.ParseLevel(level); e != nil {
+				err = e
+				return
+			} else {
+				levels = append(levels, lv)
+			}
 		}
+
+	}
+
+	if len(levels) == 0 {
+		levels = append(levels, logrus.ErrorLevel, logrus.PanicLevel, logrus.FatalLevel)
 	}
 
 	hook = &slackrus.SlackrusHook{

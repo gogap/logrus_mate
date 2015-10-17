@@ -7,7 +7,7 @@ import (
 	"github.com/gogap/logrus_mate"
 )
 
-type GrayLogHookConfig struct {
+type GraylogHookConfig struct {
 	Address  string                 `json:"address"`
 	Facility string                 `json:"facility"`
 	Extra    map[string]interface{} `json:"extra"`
@@ -18,7 +18,7 @@ func init() {
 }
 
 func NewGraylogHook(options logrus_mate.Options) (hook logrus.Hook, err error) {
-	conf := GrayLogHookConfig{}
+	conf := GraylogHookConfig{}
 
 	if err = options.ToObject(&conf); err != nil {
 		return

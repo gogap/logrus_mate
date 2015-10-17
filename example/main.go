@@ -5,9 +5,23 @@ import (
 	"os"
 
 	"github.com/gogap/logrus_mate"
+
+	_ "github.com/gogap/logrus_mate/hooks/bugsnag"
+	_ "github.com/gogap/logrus_mate/hooks/mail"
+	_ "github.com/gogap/logrus_mate/hooks/slack"
+	_ "github.com/gogap/logrus_mate/hooks/syslog"
 )
 
 func main() {
+	if _, err := os.Stat("mate.conf"); err != nil {
+		if os.IsNotExist(err) {
+			fmt.Println("Please copy mate.conf.example to mate.conf, and configure this file.")
+			return
+		}
+		fmt.Println(err)
+		return
+	}
+
 	logrus_mate.Logger().Infoln("=== Using internal defualt logurs mate ===")
 	logrus_mate.Logger().Debugln("Hello Default Logrus Mate")
 
