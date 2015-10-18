@@ -37,10 +37,9 @@ func NewSlackHook(options logrus_mate.Options) (hook logrus.Hook, err error) {
 				levels = append(levels, lv)
 			}
 		}
-
 	}
 
-	if len(levels) == 0 {
+	if len(levels) == 0 && conf.Levels != nil {
 		levels = append(levels, logrus.ErrorLevel, logrus.PanicLevel, logrus.FatalLevel)
 	}
 
