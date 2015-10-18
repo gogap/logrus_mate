@@ -1,6 +1,6 @@
 # Logrus Mate <img src="http://i.imgur.com/hTeVwmJ.png" width="40" height="40" alt=":walrus:" class="emoji" title=":walrus:"/>
 
-**Logrus mate** is a tool for [Logurs](https://github.com/Sirupsen/logrus), it will help you to initial logger by config, including `Formatter`, `Hook`，`Level` and `Environments`.
+**Logrus mate** is a tool for [Logrus](https://github.com/Sirupsen/logrus), it will help you to initial logger by config, including `Formatter`, `Hook`，`Level` and `Environments`.
 
 #### Example
 
@@ -65,7 +65,7 @@ export RUN_MODE=production
 {
     "env_keys": {
         "run_env": "RUN_MODE",
-        "env_string": ""
+        "env_json": ""
     },
     "loggers": [{
         "name": "mike",
@@ -98,7 +98,7 @@ import (
 )
 
 func main() {
-        if mateConf, err := logrus_mate.LoadLogrusMateConfig("mate.conf"); err != nil {
+    if mateConf, err := logrus_mate.LoadLogrusMateConfig("mate.conf"); err != nil {
         return
     } else {
         if newMate, err := logrus_mate.NewLogrusMate(mateConf); err != nil {
