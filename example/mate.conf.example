@@ -36,7 +36,12 @@
                 		"to":"",
                 		"username":"",
                 		"password":""
-                	}
+                	},
+                    "airbrake":{
+                        "project_id":0,
+                        "api_key":"",
+                        "env":""
+                    }
                 }
             }
         }
