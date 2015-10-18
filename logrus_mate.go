@@ -13,7 +13,7 @@ var (
 
 type LogrusMate struct {
 	loggersLock sync.Mutex
-	initalOnce  sync.Once
+	initialOnce sync.Once
 
 	loggers map[string]*logrus.Logger
 }
@@ -76,7 +76,7 @@ func (p LogrusMate) NewLogger(name string, conf LoggerConfig) (logger *logrus.Lo
 func NewLogrusMate(mateConf LogrusMateConfig) (logrusMate *LogrusMate, err error) {
 	mate := new(LogrusMate)
 
-	if err = mate.inital(mateConf); err != nil {
+	if err = mate.initial(mateConf); err != nil {
 		return
 	}
 
@@ -85,7 +85,7 @@ func NewLogrusMate(mateConf LogrusMateConfig) (logrusMate *LogrusMate, err error
 	return
 }
 
-func (p *LogrusMate) inital(mateConf LogrusMateConfig) (err error) {
+func (p *LogrusMate) initial(mateConf LogrusMateConfig) (err error) {
 	p.loggersLock.Lock()
 	defer p.loggersLock.Unlock()
 
@@ -95,7 +95,7 @@ func (p *LogrusMate) inital(mateConf LogrusMateConfig) (err error) {
 
 	p.loggers = make(map[string]*logrus.Logger, len(mateConf.Loggers))
 
-	p.initalOnce.Do(func() {
+	p.initialOnce.Do(func() {
 
 		runEnv := mateConf.RunEnv()
 
