@@ -1,7 +1,7 @@
 {
     "env_keys": {
         "run_env": "RUN_MODE",
-        "env_string": ""
+        "env_json": ""
     },
     "loggers": [{
         "name": "mike",

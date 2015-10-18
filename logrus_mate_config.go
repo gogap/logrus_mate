@@ -12,7 +12,7 @@ import (
 
 type Environments struct {
 	RunEnv  string `json:"run_env"`
-	EnvJson string `json:"env_string"`
+	EnvJson string `json:"env_json"`
 }
 
 type FormatterConfig struct {
