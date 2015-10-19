@@ -183,11 +183,11 @@ func NewMyHook(options logrus_mate.Options) (hook logrus.Hook, err error) {
 
 **internal formatters:**
 
-| Formatter  | Output Example |
-| ----- | ----------- |
-|null||
-|text|DEBU[0000] Hello Default Logrus Mate|
-|json|{"level":"info","msg":"Hello, I am A Logger from jack","time":"2015-10-18T21:24:19+08:00"}|
+| Formatter  | Options |Output Example |
+| ----- | ----------- | ----------- |
+|null|||
+|text|`force_colors` `disable_colors` `disable_timestamp` `full_timestamp` `timestamp_format` `disable_sorting`|DEBU[0000] Hello Default Logrus Mate|
+|json|`timestamp_format`|{"level":"info","msg":"Hello, I am A Logger from jack","time":"2015-10-18T21:24:19+08:00"}|
 
 **3rd formatters:**
 

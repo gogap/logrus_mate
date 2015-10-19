@@ -9,7 +9,15 @@
             "production": {
                 "level": "error",
                 "formatter": {
-                    "name": "json"
+                    "name": "text",
+                    "options":{
+                        "force_colors":false,
+                        "disable_colors":false,
+                        "disable_timestamp":false,
+                        "full_timestamp":false,
+                        "timestamp_format":"2006-01-02 15:04:05",
+                        "disable_sorting":false
+                    }
                 },
                 "hooks":{
                 	"syslog":{
