@@ -1,7 +1,6 @@
 package logrus_mate
 
 import (
-	"fmt"
 	"github.com/Sirupsen/logrus"
 )
 
