@@ -1,6 +1,7 @@
 package logrus_mate
 
 import (
+	"io"
 	"sync"
 
 	"github.com/Sirupsen/logrus"
@@ -36,6 +37,18 @@ func NewLogger(name string, conf LoggerConfig) (logger *logrus.Logger, err error
 
 func (p LogrusMate) NewLogger(name string, conf LoggerConfig) (logger *logrus.Logger, err error) {
 	tmpLogger := logrus.New()
+
+	if conf.Out.Name == "" {
+		conf.Out.Name = "stdout"
+		conf.Out.Options = nil
+	}
+
+	var out io.Writer
+	if out, err = NewWriter(conf.Out.Name, conf.Out.Options); err != nil {
+		return
+	}
+
+	tmpLogger.Out = out
 
 	if conf.Formatter.Name == "" {
 		conf.Formatter.Name = "text"

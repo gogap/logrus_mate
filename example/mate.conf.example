@@ -7,6 +7,10 @@
         "name": "mike",
         "config": {
             "production": {
+                "out": {
+                    "name": "stdout",
+                    "options": {}
+                },
                 "level": "error",
                 "formatter": {
                     "name": "text",

@@ -3,10 +3,10 @@ package logrus_mate
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Sirupsen/logrus"
 	"io/ioutil"
 	"os"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/gogap/env_json"
 )
 
@@ -20,12 +20,18 @@ type FormatterConfig struct {
 	Options Options `json:"options"`
 }
 
+type WriterConfig struct {
+	Name    string  `json:"name"`
+	Options Options `json:"options"`
+}
+
 type LoggerItem struct {
 	Name   string                  `json:"name"`
 	Config map[string]LoggerConfig `json:"config"`
 }
 
 type LoggerConfig struct {
+	Out       WriterConfig       `json:"out"`
 	Level     string             `json:"level"`
 	Hooks     map[string]Options `json:"hooks"`
 	Formatter FormatterConfig    `json:"formatter"`
@@ -91,6 +97,16 @@ func (p *LogrusMateConfig) Validate() (err error) {
 					return
 				} else if newFunc == nil {
 					err = fmt.Errorf("logurs mate: formatter's func is damaged, env: %s, name: %s", envName, conf.Formatter.Name)
+					return
+				}
+			}
+
+			if conf.Out.Name != "" {
+				if newFunc, exist := newWriterFuncs[conf.Out.Name]; !exist {
+					err = fmt.Errorf("logurs mate: writter not registered, env: %s, name: %s", envName, conf.Out.Name)
+					return
+				} else if newFunc == nil {
+					err = fmt.Errorf("logurs mate: writter's func is damaged, env: %s, name: %s", envName, conf.Out.Name)
 					return
 				}
 			}
