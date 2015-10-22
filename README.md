@@ -75,14 +75,15 @@ export RUN_MODE=production
                 "formatter": {
                     "name": "json"
                 },
-                "hooks":{
-                    "syslog":{
-                        "network":"udp",
-                        "address":"localhost:514",
-                        "priority":"LOG_ERR",
-                        "tag":""
+                "hooks": [{
+                    "name": "syslog",
+                    "options": {
+                        "network": "udp",
+                        "address": "localhost:514",
+                        "priority": "LOG_ERR",
+                        "tag": ""
                     }
-                }
+                }]
             }
         }
     }]
