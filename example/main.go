@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/gogap/logrus_mate"
 
@@ -10,6 +11,8 @@ import (
 	_ "github.com/gogap/logrus_mate/hooks/mail"
 	_ "github.com/gogap/logrus_mate/hooks/slack"
 	_ "github.com/gogap/logrus_mate/hooks/syslog"
+
+	_ "github.com/gogap/logrus_mate/writers/redisio"
 )
 
 func main() {
@@ -57,6 +60,9 @@ func main() {
 			return
 		} else {
 			newMate.Logger("mike").Errorln("I am mike in new logrus mate")
+
+			// This sleep is for output of redisio to write data to redis
+			time.Sleep(time.Second)
 		}
 	}
 

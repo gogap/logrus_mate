@@ -8,8 +8,14 @@
         "config": {
             "production": {
                 "out": {
-                    "name": "stdout",
-                    "options": {}
+                    "name": "redisio",
+                    "options": {
+                        "network": "tcp",
+                        "address": "127.0.0.1:6379",
+                        "password": "",
+                        "db": 7,
+                        "list_name":"redisio"
+                    }
                 },
                 "level": "error",
                 "formatter": {
