@@ -1,6 +1,6 @@
 # Logrus Mate <img src="http://i.imgur.com/hTeVwmJ.png" width="40" height="40" alt=":walrus:" class="emoji" title=":walrus:"/>
 
-**Logrus mate** is a tool for [Logrus](https://github.com/Sirupsen/logrus), it will help you to initial logger by config, including `Formatter`, `Hook`，`Level` and `Environments`.
+**Logrus mate** is a tool for [Logrus](https://github.com/Sirupsen/logrus), it will help you to initial logger by config, including `Formatter`, `Hook`，`Level`, `Output` and `Environments`.
 
 #### Example
 
@@ -71,6 +71,7 @@ export RUN_MODE=production
         "name": "mike",
         "config": {
             "production": {
+                "out": "stderr",
                 "level": "error",
                 "formatter": {
                     "name": "json"
@@ -226,6 +227,56 @@ func NewMyFormatter(options logrus_mate.Options) (formatter logrus.Formatter, er
     }
 
     // write your formatter logic code here
+
+    return
+}
+```
+
+#### Writers
+
+**internal writers (output):**
+
+- stdout
+- stderr
+
+**3rd writers:**
+
+| Writer  | Description |
+| ----- | ----------- |
+|redisio| just for demo|
+
+When we need use 3rd writer, we need import these package as follow:
+
+```go
+import _ "github.com/gogap/logrus_mate/writers/redisio"
+```
+
+If you want write your own writer, you just need todo as follow:
+
+```go
+package mywriter
+
+import (
+    "io"
+
+    "github.com/gogap/logrus_mate"
+)
+
+type MyWriterConfig struct {
+    Address  string `json:"address"`
+}
+
+func init() {
+    logrus_mate.RegisterWriter("mywriter", NewMyWriter)
+}
+
+func NewMyWriter(options logrus_mate.Options) (writer io.Writer, err error) {
+    conf := MyWriterConfig{}
+    if err = options.ToObject(&conf); err != nil {
+        return
+    }
+
+    // write your writer logic code here
 
     return
 }
