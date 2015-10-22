@@ -14,58 +14,69 @@
                         "address": "127.0.0.1:6379",
                         "password": "",
                         "db": 7,
-                        "list_name":"redisio"
+                        "list_name": "redisio"
                     }
                 },
                 "level": "error",
                 "formatter": {
                     "name": "text",
-                    "options":{
-                        "force_colors":false,
-                        "disable_colors":false,
-                        "disable_timestamp":false,
-                        "full_timestamp":false,
-                        "timestamp_format":"2006-01-02 15:04:05",
-                        "disable_sorting":false
+                    "options": {
+                        "force_colors": false,
+                        "disable_colors": false,
+                        "disable_timestamp": false,
+                        "full_timestamp": false,
+                        "timestamp_format": "2006-01-02 15:04:05",
+                        "disable_sorting": false
                     }
                 },
-                "hooks":{
-                	"syslog":{
-                		"network":"udp",
-                		"address":"localhost:514",
-                		"priority":"LOG_ERR",
-                		"tag":""
-                	},
-                	"bugsnag":{
-                		"api_key":""
-                	},
-                	"slack":{
-                		"url":"",
-                		"levels":["debug", "error", "info"],
-                		"channel":"",
-                		"emoji":":rag:",
-                		"username":"logrus_mate"
-                	},
-                	"mail":{
-                		"app_name":"logrus_example",
-                		"host":"smtp.xxx.com",
-                		"port":587,
-                		"from":"",
-                		"to":"",
-                		"username":"",
-                		"password":""
-                	},
-                    "airbrake":{
-                        "project_id":0,
-                        "api_key":"",
-                        "env":""
-                    },
-                    "graylog":{
-                        "address":"",
-                        "facility":"",
-                        "extra":{}
+                "hooks": [{
+                    "name": "syslog",
+                    "options": {
+                        "network": "udp",
+                        "address": "localhost:514",
+                        "priority": "LOG_ERR",
+                        "tag": ""
                     }
-                }
+                }, {
+                    "name": "bugsnag",
+                    "options": {
+                        "api_key": ""
+                    }
+                }, {
+                    "name": "slack",
+                    "options": {
+                        "url": "",
+                        "levels": ["debug", "error", "info"],
+                        "channel": "",
+                        "emoji": ":rag:",
+                        "username": "logrus_mate"
+                    }
+                }, {
+                    "name": "mail",
+                    "options": {
+                        "app_name": "logrus_example",
+                        "host": "smtp.xxx.com",
+                        "port": 587,
+                        "from": "",
+                        "to": "",
+                        "username": "",
+                        "password": ""
+                    }
+                }, {
+                    "name": "airbrake",
+                    "options": {
+                        "project_id": 0,
+                        "api_key": "",
+                        "env": ""
+                    }
+                }, {
+                    "name": "graylog",
+                    "options": {
+                        "address": "",
+                        "facility": "",
+                        "extra": {}
+                    }
+                }]
             }
         }
     }]

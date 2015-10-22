@@ -63,9 +63,9 @@ func (p LogrusMate) NewLogger(name string, conf LoggerConfig) (logger *logrus.Lo
 	tmpLogger.Formatter = formatter
 
 	if conf.Hooks != nil {
-		for hookName, hookOpt := range conf.Hooks {
+		for _, hookConf := range conf.Hooks {
 			var hook logrus.Hook
-			if hook, err = NewHook(hookName, hookOpt); err != nil {
+			if hook, err = NewHook(hookConf.Name, hookConf.Options); err != nil {
 				return
 			}
 			tmpLogger.Hooks.Add(hook)

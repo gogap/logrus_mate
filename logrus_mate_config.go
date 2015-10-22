@@ -20,6 +20,11 @@ type FormatterConfig struct {
 	Options Options `json:"options"`
 }
 
+type HookConfig struct {
+	Name    string  `json:"name"`
+	Options Options `json:"options"`
+}
+
 type WriterConfig struct {
 	Name    string  `json:"name"`
 	Options Options `json:"options"`
@@ -31,10 +36,10 @@ type LoggerItem struct {
 }
 
 type LoggerConfig struct {
-	Out       WriterConfig       `json:"out"`
-	Level     string             `json:"level"`
-	Hooks     map[string]Options `json:"hooks"`
-	Formatter FormatterConfig    `json:"formatter"`
+	Out       WriterConfig    `json:"out"`
+	Level     string          `json:"level"`
+	Hooks     []HookConfig    `json:"hooks"`
+	Formatter FormatterConfig `json:"formatter"`
 }
 
 type LogrusMateConfig struct {
@@ -80,12 +85,12 @@ func (p *LogrusMateConfig) Validate() (err error) {
 			}
 
 			if conf.Hooks != nil {
-				for hook, _ := range conf.Hooks {
-					if newFunc, exist := newHookFuncs[hook]; !exist {
-						err = fmt.Errorf("logurs mate: hook not registered, env: %s, name: %s", envName, hook)
+				for id, hook := range conf.Hooks {
+					if newFunc, exist := newHookFuncs[hook.Name]; !exist {
+						err = fmt.Errorf("logurs mate: hook not registered, env: %s, id: %d, name: %s", envName, id, hook)
 						return
 					} else if newFunc == nil {
-						err = fmt.Errorf("logurs mate: hook's func is damaged, env: %s, name: %s", envName, hook)
+						err = fmt.Errorf("logurs mate: hook's func is damaged, env: %s, id: %d name: %s", envName, id, hook)
 						return
 					}
 				}
