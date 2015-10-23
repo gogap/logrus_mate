@@ -238,12 +238,13 @@ func NewMyFormatter(options logrus_mate.Options) (formatter logrus.Formatter, er
 
 - stdout
 - stderr
+- null
 
 **3rd writers:**
 
 | Writer  | Description |
 | ----- | ----------- |
-|redisio| just for demo|
+|redisio| just for demo, it will output into redis, the key type is list|
 
 When we need use 3rd writer, we need import these package as follow:
 
