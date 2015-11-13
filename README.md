@@ -71,7 +71,10 @@ export RUN_MODE=production
         "name": "mike",
         "config": {
             "production": {
-                "out": "stderr",
+                "out": {
+                    "name": "stderr",
+                    "options":{}
+                },
                 "level": "error",
                 "formatter": {
                     "name": "json"
