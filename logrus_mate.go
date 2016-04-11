@@ -22,9 +22,7 @@ type LogrusMate struct {
 func Logger(loggerName ...string) (logger *logrus.Logger) {
 	if defaultMate == nil {
 		defaultMateInitOnce.Do(func() {
-			if defaultMate == nil {
-				defaultMate = defaultLogrusMate()
-			}
+			defaultMate = defaultLogrusMate()
 		})
 	}
 
@@ -32,6 +30,12 @@ func Logger(loggerName ...string) (logger *logrus.Logger) {
 }
 
 func NewLogger(name string, conf LoggerConfig) (logger *logrus.Logger, err error) {
+	if defaultMate == nil {
+		defaultMateInitOnce.Do(func() {
+			defaultMate = defaultLogrusMate()
+		})
+	}
+
 	return defaultMate.NewLogger(name, conf)
 }
 
