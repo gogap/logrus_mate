@@ -62,3 +62,17 @@ func NewFormatter(name string, options Options) (formatter logrus.Formatter, err
 
 	return
 }
+
+func prefixFieldClashes(data logrus.Fields) {
+	if t, ok := data["time"]; ok {
+		data["fields.time"] = t
+	}
+
+	if m, ok := data["msg"]; ok {
+		data["fields.msg"] = m
+	}
+
+	if l, ok := data["level"]; ok {
+		data["fields.level"] = l
+	}
+}
