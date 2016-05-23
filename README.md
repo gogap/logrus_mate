@@ -64,8 +64,7 @@ export RUN_MODE=production
 ```json
 {
     "env_keys": {
-        "run_env": "RUN_MODE",
-        "env_json": ""
+        "run_env": "RUN_MODE"
     },
     "loggers": [{
         "name": "mike",
@@ -130,12 +129,12 @@ different environment could have own `level`, `hooks` and `formatters`, logrus m
 ```go
 type Environments struct {
     RunEnv  string `json:"run_env"`
-    EnvJson string `json:"env_json"`
 }
 ```
 
 `run_env`: this filed is the key of run env, it will get actual value from environment by this key.
-`env_json`: the env_json's env key, if this field is not empty, it will use `env_json` to compile config file while you use func `logrus_mate.LoadLogrusMateConfig`, please forward to the project of [env_json](https://github.com/gogap/env_json) to known more details.
+
+> The json config file will be compile with package of `gogap/env_json` while you use func `logrus_mate.LoadLogrusMateConfig`, please forward to the project of [env_json](https://github.com/gogap/env_json) to known more details.
 
 #### Hooks
 | Hook  | Options |

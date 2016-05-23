@@ -11,8 +11,7 @@ import (
 )
 
 type Environments struct {
-	RunEnv  string `json:"run_env"`
-	EnvJson string `json:"env_json"`
+	RunEnv string `json:"run_env"`
 }
 
 type FormatterConfig struct {
@@ -58,17 +57,7 @@ func LoadLogrusMateConfig(filename string) (conf LogrusMateConfig, err error) {
 		return
 	}
 
-	tmpConf := LogrusMateConfig{}
-	if err = json.Unmarshal(data, &tmpConf); err != nil {
-		return
-	}
-
-	if tmpConf.EnvironmentKeys.EnvJson == "" {
-		conf = tmpConf
-		return
-	}
-
-	envJSON := env_json.NewEnvJson(tmpConf.EnvironmentKeys.EnvJson, env_json.ENV_JSON_EXT)
+	envJSON := env_json.NewEnvJson(env_json.ENV_JSON_KEY, env_json.ENV_JSON_EXT)
 
 	if err = envJSON.Unmarshal(data, &conf); err != nil {
 		return

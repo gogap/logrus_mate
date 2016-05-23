@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/gogap/errors"
 	"os"
 	"time"
 
@@ -53,6 +54,7 @@ func main() {
 		logrus_mate.Logger().Error(err)
 		return
 	} else {
+
 		logrus_mate.Logger().Debugf("Run mode is %s", mateConf.RunEnv())
 
 		if newMate, err := logrus_mate.NewLogrusMate(mateConf); err != nil {
@@ -60,6 +62,11 @@ func main() {
 			return
 		} else {
 			newMate.Logger("mike").Errorln("I am mike in new logrus mate")
+
+			ErrTest := errors.TN("GOGAP", 1000, "hello {{.param}}")
+			ErrTest2 := errors.TN("GOGAP", 1002, "hello")
+			e := ErrTest.New(errors.Params{"param": "world"}).Append("append error").Append(ErrTest2).WithContext("key", "Value")
+			newMate.Logger("mike").WithError(e).Error(e)
 
 			// This sleep is for output of redisio to write data to redis
 			time.Sleep(time.Second)
