@@ -2,15 +2,14 @@ package graylog
 
 import (
 	"github.com/Sirupsen/logrus"
-	"gopkg.in/gemnasium/logrus-graylog-hook.v1"
+	"gopkg.in/gemnasium/logrus-graylog-hook.v2"
 
 	"github.com/gogap/logrus_mate"
 )
 
 type GraylogHookConfig struct {
-	Address  string                 `json:"address"`
-	Facility string                 `json:"facility"`
-	Extra    map[string]interface{} `json:"extra"`
+	Address string                 `json:"address"`
+	Extra   map[string]interface{} `json:"extra"`
 }
 
 func init() {
@@ -24,9 +23,8 @@ func NewGraylogHook(options logrus_mate.Options) (hook logrus.Hook, err error) {
 		return
 	}
 
-	hook = graylog.NewGraylogHook(
+	hook = graylog.NewAsyncGraylogHook(
 		conf.Address,
-		conf.Facility,
 		conf.Extra)
 
 	return
