@@ -61,20 +61,6 @@
                         "username": "",
                         "password": ""
                     }
-                }, {
-                    "name": "airbrake",
-                    "options": {
-                        "project_id": 0,
-                        "api_key": "",
-                        "env": ""
-                    }
-                }, {
-                    "name": "graylog",
-                    "options": {
-                        "address": "",
-                        "facility": "",
-                        "extra": {}
-                    }
                 }]
             }
         }
