@@ -9,6 +9,7 @@ import (
 	"github.com/gogap/logrus_mate"
 
 	_ "github.com/gogap/logrus_mate/hooks/bugsnag"
+	_ "github.com/gogap/logrus_mate/hooks/logstash"
 	_ "github.com/gogap/logrus_mate/hooks/mail"
 	_ "github.com/gogap/logrus_mate/hooks/slack"
 	_ "github.com/gogap/logrus_mate/hooks/syslog"

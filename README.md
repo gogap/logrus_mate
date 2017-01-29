@@ -145,6 +145,7 @@ type Environments struct {
 | [Slackrus](https://github.com/johntdyer/slackrus) | `url` `levels` `channel` `emoji` `username`|
 | [Graylog](https://github.com/gemnasium/logrus-graylog-hook) | `address` `facility` `extra`|
 | [Mail](https://github.com/zbindenren/logrus_mail) | `app_name` `host` `port` `from` `to` `username` `password`|
+| [Logstash](https://github.com/bshuster-repo/logrus-logstash-hook) | `app_name` `protocol` `address` `always_sent_fields` `prefix`|
 
 When we need use above hooks, we need import these package as follow:
 
@@ -197,12 +198,12 @@ func NewMyHook(options logrus_mate.Options) (hook logrus.Hook, err error) {
 
 | Formatter  | Output Example |
 | ----- | ----------- |
-|logstash||
+|logstash [**Removed**]||
 
 When we need use 3rd formatter, we need import these package as follow:
 
 ```go
-import _ "github.com/gogap/logrus_mate/formatters/logstash"
+import _ "github.com/gogap/logrus_mate/formatters/xxx"
 ```
 
 If you want write your own formatter, you just need todo as follow:
