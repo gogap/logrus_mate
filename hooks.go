@@ -5,7 +5,7 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 var (

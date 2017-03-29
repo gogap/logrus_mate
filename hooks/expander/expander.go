@@ -3,7 +3,7 @@ package expander
 import (
 	"github.com/gogap/errors"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/gogap/logrus_mate"
 )
 
