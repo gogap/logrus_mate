@@ -17,7 +17,7 @@ var (
 	errFormatterNotRegistered = errors.New("formatter not registerd")
 )
 
-type NewFormatterFunc func(Options) (formatter logrus.Formatter, err error)
+type NewFormatterFunc func(*Options) (formatter logrus.Formatter, err error)
 
 func RegisterFormatter(name string, newFormatterFunc NewFormatterFunc) {
 	formattersLocker.Lock()
@@ -49,7 +49,7 @@ func Formatters() []string {
 	return list
 }
 
-func NewFormatter(name string, options Options) (formatter logrus.Formatter, err error) {
+func NewFormatter(name string, options *Options) (formatter logrus.Formatter, err error) {
 	formattersLocker.Lock()
 	defer formattersLocker.Unlock()
 

@@ -8,22 +8,26 @@ import (
 )
 
 type SlackHookConfig struct {
-	URL      string   `json:"url"`
-	Levels   []string `json:"levels"`
-	Channel  string   `json:"channel"`
-	Emoji    string   `json:"emoji"`
-	Username string   `json:"username"`
+	URL      string
+	Levels   []string
+	Channel  string
+	Emoji    string
+	Username string
 }
 
 func init() {
 	logrus_mate.RegisterHook("slack", NewSlackHook)
 }
 
-func NewSlackHook(options logrus_mate.Options) (hook logrus.Hook, err error) {
+func NewSlackHook(options *logrus_mate.Options) (hook logrus.Hook, err error) {
 	conf := SlackHookConfig{}
 
-	if err = options.ToObject(&conf); err != nil {
-		return
+	if options != nil {
+		conf.URL = options.GetString("url")
+		conf.Levels = options.GetStringList("levels")
+		conf.Channel = options.GetString("channel")
+		conf.Emoji = options.GetString("emoji")
+		conf.Username = options.GetString("username")
 	}
 
 	levels := []logrus.Level{}

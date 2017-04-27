@@ -8,19 +8,29 @@ import (
 )
 
 type GraylogHookConfig struct {
-	Address string                 `json:"address"`
-	Extra   map[string]interface{} `json:"extra"`
+	Address string
+	Extra   map[string]interface{}
 }
 
 func init() {
 	logrus_mate.RegisterHook("graylog", NewGraylogHook)
 }
 
-func NewGraylogHook(options logrus_mate.Options) (hook logrus.Hook, err error) {
+func NewGraylogHook(options *logrus_mate.Options) (hook logrus.Hook, err error) {
 	conf := GraylogHookConfig{}
 
-	if err = options.ToObject(&conf); err != nil {
-		return
+	if options != nil {
+		conf.Address = options.GetString("address")
+
+		extraConf := options.GetConfig("extra")
+		keys := extraConf.Root().GetObject().GetKeys()
+		extra := make(map[string]interface{}, len(keys))
+
+		for i := 0; i < len(keys); i++ {
+			extra[keys[i]] = extraConf.GetString(keys[i])
+		}
+
+		conf.Extra = extra
 	}
 
 	hook = graylog.NewAsyncGraylogHook(

@@ -8,30 +8,21 @@ import (
 	"github.com/gogap/logrus_mate"
 )
 
-type BugsnagHookConfig struct {
-	Endpoint     string `json:"endpoint"`
-	ReleaseStage string `json:"release_stage"`
-	APIKey       string `json:"api_key"`
-	Synchronous  bool   `json:"synchronous"`
-}
-
 func init() {
 	logrus_mate.RegisterHook("bugsnag", NewBugsnagHook)
 }
 
-func NewBugsnagHook(options logrus_mate.Options) (hook logrus.Hook, err error) {
-	conf := BugsnagHookConfig{}
+func NewBugsnagHook(options *logrus_mate.Options) (hook logrus.Hook, err error) {
 
-	if err = options.ToObject(&conf); err != nil {
-		return
+	if options != nil {
+		bugsnag.Configure(
+			bugsnag.Configuration{
+				Endpoint:     options.GetString("endpoint"),
+				ReleaseStage: options.GetString("release-stage"),
+				APIKey:       options.GetString("api-key"),
+				Synchronous:  options.GetBoolean("synchronous"),
+			})
 	}
-
-	bugsnag.Configure(bugsnag.Configuration{
-		Endpoint:     conf.Endpoint,
-		ReleaseStage: conf.ReleaseStage,
-		APIKey:       conf.APIKey,
-		Synchronous:  conf.Synchronous,
-	})
 
 	hook, err = logrus_bugsnag.NewBugsnagHook()
 	return

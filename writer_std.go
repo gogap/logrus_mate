@@ -10,12 +10,12 @@ func init() {
 	RegisterWriter("stderr", NewStderrWriter)
 }
 
-func NewStdoutWriter(options Options) (writer io.Writer, err error) {
+func NewStdoutWriter(*Options) (writer io.Writer, err error) {
 	writer = os.Stdout
 	return
 }
 
-func NewStderrWriter(options Options) (writer io.Writer, err error) {
+func NewStderrWriter(*Options) (writer io.Writer, err error) {
 	writer = os.Stderr
 	return
 }

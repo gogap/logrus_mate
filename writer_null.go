@@ -15,7 +15,7 @@ func (w *NullWriter) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-func NewNullWriter(options Options) (writer io.Writer, err error) {
+func NewNullWriter(conf *Options) (writer io.Writer, err error) {
 	writer = new(NullWriter)
 	return
 }

@@ -11,22 +11,26 @@ import (
 )
 
 type RedisIOConfig struct {
-	Network  string `json:"network"`
-	Address  string `json:"address"`
-	Password string `json:"password"`
-	Db       int64  `json:"db"`
-	ListName string `json:"list_name"`
+	Network  string
+	Address  string
+	Password string
+	Db       int64
+	ListName string
 }
 
 func init() {
 	logrus_mate.RegisterWriter("redisio", NewRedisIOWriter)
 }
 
-func NewRedisIOWriter(options logrus_mate.Options) (writer io.Writer, err error) {
+func NewRedisIOWriter(options *logrus_mate.Options) (writer io.Writer, err error) {
 	conf := RedisIOConfig{}
 
-	if err = options.ToObject(&conf); err != nil {
-		return
+	if options != nil {
+		conf.Network = options.GetString("network")
+		conf.Address = options.GetString("address")
+		conf.Password = options.GetString("password")
+		conf.Db = options.GetInt64("db")
+		conf.ListName = options.GetString("list-name")
 	}
 
 	if conf.ListName == "" {

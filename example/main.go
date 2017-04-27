@@ -2,76 +2,44 @@ package main
 
 import (
 	"fmt"
-	"github.com/gogap/errors"
-	"os"
-	"time"
 
+	"github.com/Sirupsen/logrus"
+	"github.com/go-akka/configuration"
+	"github.com/gogap/errors"
 	"github.com/gogap/logrus_mate"
 
-	_ "github.com/gogap/logrus_mate/hooks/bugsnag"
-	_ "github.com/gogap/logrus_mate/hooks/logstash"
-	_ "github.com/gogap/logrus_mate/hooks/mail"
+	_ "github.com/gogap/logrus_mate/hooks/expander"
 	_ "github.com/gogap/logrus_mate/hooks/slack"
-	_ "github.com/gogap/logrus_mate/hooks/syslog"
-
-	_ "github.com/gogap/logrus_mate/writers/redisio"
 )
 
 func main() {
-	if _, err := os.Stat("mate.conf"); err != nil {
-		if os.IsNotExist(err) {
-			fmt.Println("Please copy mate.conf.example to mate.conf, and configure this file.")
-			return
-		}
+	// Hijack logrus StandardLogger()
+	logrus_mate.Hijack(logrus.StandardLogger(), configuration.ParseString(`{formatter.name = "json"}`))
+
+	logrus.WithField("Field", "A").Debugln("Hello JSON")
+
+	mate, err := logrus_mate.NewLogrusMate(configuration.LoadConfig("mate.conf"))
+
+	newLoger := logrus.New()
+
+	if err = mate.Hijack(newLoger, "mike"); err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	logrus_mate.Logger().Infoln("=== Using internal defualt logurs mate ===")
-	logrus_mate.Logger().Debugln("Hello Default Logrus Mate")
+	// newLogger is Hijackt by mike config
+	newLoger.Debug("You could not see me")
+	newLoger.Errorln("Hello Error Level")
 
-	loggerConf := logrus_mate.LoggerConfig{
-		Level: "info",
-		Formatter: logrus_mate.FormatterConfig{
-			Name: "json",
-		},
-	}
+	mikeLoger := mate.Logger("mike")
 
-	if _, err := logrus_mate.NewLogger("jack", loggerConf); err != nil {
-		logrus_mate.Logger().Error(err)
-		return
-	}
+	// create a new mike logger
+	mikeLoger.Errorln("Hello Error Level from Mike")
 
-	logrus_mate.Logger().Warnln("*** Add Logger named jack, and it will use json format")
+	ErrGoGapError := errors.TN("LogrusMate", 1000, "hello gogap {{.name}}")
 
-	logrus_mate.Logger("jack").Debugln("not print")
-	logrus_mate.Logger("jack").Infoln("Hello, I am A Logger from jack")
+	e := ErrGoGapError.New(errors.Params{"name": "zeal"})
 
-	fmt.Println("")
-	os.Setenv("RUN_MODE", "production")
-	logrus_mate.Logger().Infoln("=== Load logrus mate config from mate.conf ===")
-
-	if mateConf, err := logrus_mate.LoadLogrusMateConfig("mate.conf"); err != nil {
-		logrus_mate.Logger().Error(err)
-		return
-	} else {
-
-		logrus_mate.Logger().Debugf("Run mode is %s", mateConf.RunEnv())
-
-		if newMate, err := logrus_mate.NewLogrusMate(mateConf); err != nil {
-			logrus_mate.Logger().Error(err)
-			return
-		} else {
-			newMate.Logger("mike").Errorln("I am mike in new logrus mate")
-
-			ErrTest := errors.TN("GOGAP", 1000, "hello {{.param}}")
-			ErrTest2 := errors.TN("GOGAP", 1002, "hello")
-			e := ErrTest.New(errors.Params{"param": "world"}).Append("append error").Append(ErrTest2).WithContext("key", "Value")
-			newMate.Logger("mike").WithError(e).Error(e)
-
-			// This sleep is for output of redisio to write data to redis
-			time.Sleep(time.Second)
-		}
-	}
-
+	// it will hijack
+	mikeLoger.WithError(e).Errorln("hello with gogap errors")
 }
