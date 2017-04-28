@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/go-akka/configuration"
 	"github.com/gogap/errors"
 	"github.com/gogap/logrus_mate"
 
@@ -14,11 +13,11 @@ import (
 
 func main() {
 	// Hijack logrus StandardLogger()
-	logrus_mate.Hijack(logrus.StandardLogger(), configuration.ParseString(`{formatter.name = "json"}`))
+	logrus_mate.Hijack(logrus.StandardLogger(), logrus_mate.ConfigString(`{formatter.name = "json"}`))
 
 	logrus.WithField("Field", "A").Debugln("Hello JSON")
 
-	mate, err := logrus_mate.NewLogrusMate(configuration.LoadConfig("mate.conf"))
+	mate, err := logrus_mate.NewLogrusMate(logrus_mate.ConfigFile("mate.conf"))
 
 	newLoger := logrus.New()
 
