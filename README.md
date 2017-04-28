@@ -79,6 +79,7 @@ func main() {
 | [Mail](https://github.com/zbindenren/logrus_mail) | `app-name` `host` `port` `from` `to` `username` `password`|
 | [Logstash](https://github.com/bshuster-repo/logrus-logstash-hook) | `app-name` `protocol` `address` `always-sent-fields` `prefix`|
 | File | `filename` `max-lines` `max-size` `daily` `max-days` `rotate` `level`|
+| BearyChat | `robot-id` `token` `levels` `channel` `user` `markdown` `async`|
 
 When we need use above hooks, we need import these package as follow:
 

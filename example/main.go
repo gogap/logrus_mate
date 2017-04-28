@@ -7,8 +7,8 @@ import (
 	"github.com/gogap/errors"
 	"github.com/gogap/logrus_mate"
 
+	_ "github.com/gogap/logrus_mate/hooks/bearychat"
 	_ "github.com/gogap/logrus_mate/hooks/expander"
-	_ "github.com/gogap/logrus_mate/hooks/slack"
 )
 
 func main() {
