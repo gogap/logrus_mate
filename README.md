@@ -15,12 +15,17 @@ package main
 
 import (
     "github.com/Sirupsen/logrus"
-    "github.com/go-akka/configuration"
     "github.com/gogap/logrus_mate"
 )
 
 func main() {
-    logrus_mate.Hijack(logrus.StandardLogger(), configuration.ParseString(`{formatter.name = "json"}`))
+    logrus_mate.Hijack(
+        logrus.StandardLogger(),
+        logrus_mate.ConfigString(
+            `{formatter.name = "json"}`,
+        ),
+    )
+    
     logrus.WithField("Field", "A").Debugln("Hello JSON")
 }
 
@@ -34,12 +39,16 @@ Create new logger from mate:
 package main
 
 import (
-    "github.com/go-akka/configuration"
     "github.com/gogap/logrus_mate"
 )
 
 func main() {
-    mate, _ := logrus_mate.NewLogrusMate(configuration.ParseString(`{ mike {formatter.name = "json"} }`))
+    mate, _ := logrus_mate.NewLogrusMate(
+        logrus_mate.ConfigString(
+            `{ mike {formatter.name = "json"} }`,
+        ),
+    )
+    
     mikeLoger := mate.Logger("mike")
     mikeLoger.Errorln("Hello Error Level from Mike and my formatter is json")
 }
@@ -54,17 +63,89 @@ package main
 
 import (
     "github.com/Sirupsen/logrus"
-    "github.com/go-akka/configuration"
     "github.com/gogap/logrus_mate"
 )
 
 func main() {
-    mate, _ := logrus_mate.NewLogrusMate(configuration.ParseString(`{ mike {formatter.name = "json"} }`))
-    mate.Hijack(logrus.StandardLogger(), "mike")
+    mate, _ := logrus_mate.NewLogrusMate(
+        logrus_mate.ConfigString(
+            `{ mike {formatter.name = "json"} }`,
+        ),
+    )
+
+    mate.Hijack(
+        logrus.StandardLogger(),
+        "mike",
+    )
+    
     logrus.Println("hello std logger is hijack by mike")
 }
-
 ```
+
+**Example 4:**
+
+Fallback the ConfigString
+
+```go
+package main
+
+import (
+    "github.com/Sirupsen/logrus"
+    "github.com/gogap/logrus_mate"
+)
+
+func main() {
+    mate, _ := logrus_mate.NewLogrusMate(
+        logrus_mate.ConfigString(
+            `{ mike {formatter.name = "json"} }`,
+        ),
+        logrus_mate.ConfigFile(
+            "mate.conf", // { mike {formatter.name = "text"} }
+        ),
+    )
+
+    mate.Hijack(
+        logrus.StandardLogger(),
+        "mike",
+    )
+    
+    logrus.Println("hello std logger is hijack by mike")
+}
+```
+
+** the `json` formatter is used**
+
+**Example 5:**
+
+Fallback config while hijack
+
+```go
+package main
+
+import (
+    "github.com/Sirupsen/logrus"
+    "github.com/gogap/logrus_mate"
+)
+
+func main() {
+    mate, _ := logrus_mate.NewLogrusMate(
+        logrus_mate.ConfigFile(
+            "mate.conf", // { mike {formatter.name = "text"} }
+        ),
+    )
+
+    mate.Hijack(logrus.StandardLogger(),
+        "mike",
+        logrus_mate.ConfigString(
+            `{formatter.name = "json"}`,
+        ),
+    )
+
+    logrus.Errorln("hello std logger is hijack by mike")
+}
+```
+
+** the `json` formatter is used**
 
 > currently we are using https://github.com/go-akka/configuration for logger config, it will more powerful config format for human read
 
@@ -79,7 +160,6 @@ func main() {
 | [Mail](https://github.com/zbindenren/logrus_mail) | `app-name` `host` `port` `from` `to` `username` `password`|
 | [Logstash](https://github.com/bshuster-repo/logrus-logstash-hook) | `app-name` `protocol` `address` `always-sent-fields` `prefix`|
 | File | `filename` `max-lines` `max-size` `daily` `max-days` `rotate` `level`|
-| BearyChat | `robot-id` `token` `levels` `channel` `user` `markdown` `async`|
 
 When we need use above hooks, we need import these package as follow:
 
