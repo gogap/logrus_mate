@@ -19,20 +19,28 @@ var (
 )
 
 type LogrusMate struct {
-	loggersConf cmap.ConcurrentMap //map[string]*configuration.Config
+	loggersConf cmap.ConcurrentMap //map[string]*Config
 	loggers     cmap.ConcurrentMap //map[string]*logrus.Logger
 }
 
-func NewLogger(conf *configuration.Config) (logger *logrus.Logger, err error) {
+func NewLogger(opts ...Option) (logger *logrus.Logger, err error) {
 	l := logrus.New()
-	if err = Hijack(l, conf); err != nil {
+	if err = Hijack(l, opts...); err != nil {
 		return
 	}
 
 	return l, nil
 }
 
-func Hijack(logger *logrus.Logger, conf *configuration.Config) (err error) {
+func Hijack(logger *logrus.Logger, opts ...Option) (err error) {
+	hijackConf := newConfig(opts...)
+	conf := hijackConf.config
+
+	return hijackByConfig(logger, conf)
+}
+
+func hijackByConfig(logger *logrus.Logger, conf *configuration.Config) (err error) {
+
 	outConf := conf.GetConfig("out")
 	formatterConf := conf.GetConfig("formatter")
 
@@ -92,20 +100,32 @@ func Hijack(logger *logrus.Logger, conf *configuration.Config) (err error) {
 		return
 	}
 
-	logger.Level = lvl
-	logger.Out = out
-	logger.Formatter = formatter
+	l := logrus.New()
+
+	l.Level = lvl
+	l.Out = out
+	l.Formatter = formatter
 	for i := 0; i < len(hooks); i++ {
-		logger.Hooks.Add(hooks[i])
+		l.Hooks.Add(hooks[i])
 	}
+
+	*logger = *l
 
 	return
 }
 
-func NewLogrusMate(conf *configuration.Config) (logrusMate *LogrusMate, err error) {
+func NewLogrusMate(opts ...Option) (logrusMate *LogrusMate, err error) {
 	mate := &LogrusMate{
 		loggersConf: cmap.New(),
 		loggers:     cmap.New(),
+	}
+
+	hijackConf := newConfig(opts...)
+	conf := hijackConf.config
+
+	if conf.Root() == nil {
+		logrusMate = mate
+		return
 	}
 
 	loggerNames := conf.Root().GetObject().GetKeys()
@@ -119,14 +139,23 @@ func NewLogrusMate(conf *configuration.Config) (logrusMate *LogrusMate, err erro
 	return
 }
 
-func (p *LogrusMate) Hijack(logger *logrus.Logger, loggerName string) (err error) {
+func (p *LogrusMate) Hijack(logger *logrus.Logger, loggerName string, opts ...Option) (err error) {
 	confV, exist := p.loggersConf.Get(loggerName)
 	if !exist {
 		err = ErrLoggerNotExist
 		return
 	}
 
-	err = Hijack(logger, confV.(*configuration.Config))
+	conf := confV.(*configuration.Config)
+
+	if len(opts) > 0 {
+		conf2 := newConfig(opts...)
+		conf2.config.WithFallback(conf)
+		err = hijackByConfig(logger, conf2.config)
+		return
+	}
+
+	err = hijackByConfig(logger, confV.(*configuration.Config))
 
 	return
 }
@@ -154,7 +183,7 @@ func (p *LogrusMate) Logger(loggerName ...string) (logger *logrus.Logger) {
 
 	l := logrus.New()
 
-	if err := Hijack(l, confV.(*configuration.Config)); err != nil {
+	if err := hijackByConfig(l, confV.(*configuration.Config)); err != nil {
 		return nil
 	}
 
