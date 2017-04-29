@@ -1,100 +1,137 @@
 package logrus_mate
 
 import (
+	"errors"
 	"io"
-	"sync"
+	"strings"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/go-akka/configuration"
+	"github.com/orcaman/concurrent-map"
 )
 
+type Options struct {
+	*configuration.Config
+}
+
 var (
-	defaultMate         *LogrusMate
-	defaultMateInitOnce sync.Once
+	ErrLoggerNotExist = errors.New("logger not exist")
 )
 
 type LogrusMate struct {
-	loggersLock sync.Mutex
-	initialOnce sync.Once
-
-	loggers map[string]*logrus.Logger
+	loggersConf cmap.ConcurrentMap //map[string]*Config
+	loggers     cmap.ConcurrentMap //map[string]*logrus.Logger
 }
 
-func Logger(loggerName ...string) (logger *logrus.Logger) {
-	if defaultMate == nil {
-		defaultMateInitOnce.Do(func() {
-			defaultMate = defaultLogrusMate()
-		})
+func NewLogger(opts ...Option) (logger *logrus.Logger, err error) {
+	l := logrus.New()
+	if err = Hijack(l, opts...); err != nil {
+		return
 	}
 
-	return defaultMate.Logger(loggerName...)
+	return l, nil
 }
 
-func NewLogger(name string, conf LoggerConfig) (logger *logrus.Logger, err error) {
-	if defaultMate == nil {
-		defaultMateInitOnce.Do(func() {
-			defaultMate = defaultLogrusMate()
-		})
+func Hijack(logger *logrus.Logger, opts ...Option) (err error) {
+	hijackConf := newConfig(opts...)
+	conf := hijackConf.config
+
+	return hijackByConfig(logger, conf)
+}
+
+func hijackByConfig(logger *logrus.Logger, conf *configuration.Config) (err error) {
+
+	outConf := conf.GetConfig("out")
+	formatterConf := conf.GetConfig("formatter")
+
+	outName := "stdout"
+	formatterName := "text"
+
+	var outOptionsConf, formatterOptionsConf *configuration.Config
+
+	if outConf != nil {
+		outName = outConf.GetString("name", "stdout")
+		outOptionsConf = outConf.GetConfig("options")
 	}
 
-	return defaultMate.NewLogger(name, conf)
-}
-
-func (p LogrusMate) NewLogger(name string, conf LoggerConfig) (logger *logrus.Logger, err error) {
-	tmpLogger := logrus.New()
-
-	if conf.Out.Name == "" {
-		conf.Out.Name = "stdout"
-		conf.Out.Options = nil
+	if formatterConf != nil {
+		formatterName = formatterConf.GetString("name", "text")
+		formatterOptionsConf = formatterConf.GetConfig("options")
 	}
 
 	var out io.Writer
-	if out, err = NewWriter(conf.Out.Name, conf.Out.Options); err != nil {
-		return
+	var outOptions *Options
+	if outOptionsConf != nil {
+		outOptions = &Options{outOptionsConf}
 	}
-
-	tmpLogger.Out = out
-
-	if conf.Formatter.Name == "" {
-		conf.Formatter.Name = "text"
-		conf.Formatter.Options = nil
+	if out, err = NewWriter(outName, outOptions); err != nil {
+		return
 	}
 
 	var formatter logrus.Formatter
-	if formatter, err = NewFormatter(conf.Formatter.Name, conf.Formatter.Options); err != nil {
+	var formatterOptions *Options
+	if formatterOptionsConf != nil {
+		formatterOptions = &Options{formatterOptionsConf}
+	}
+	if formatter, err = NewFormatter(formatterName, formatterOptions); err != nil {
 		return
 	}
 
-	tmpLogger.Formatter = formatter
+	var hooks []logrus.Hook
 
-	if conf.Hooks != nil {
-		for _, hookConf := range conf.Hooks {
+	confHooks := conf.GetConfig("hooks")
+
+	if confHooks != nil {
+		hookNames := confHooks.Root().GetObject().GetKeys()
+
+		for i := 0; i < len(hookNames); i++ {
 			var hook logrus.Hook
-			if hook, err = NewHook(hookConf.Name, hookConf.Options); err != nil {
+			if hook, err = NewHook(hookNames[i], confHooks.GetConfig(hookNames[i])); err != nil {
 				return
 			}
-			tmpLogger.Hooks.Add(hook)
+			hooks = append(hooks, hook)
 		}
 	}
 
+	level := conf.GetString("level", "debug")
+
 	var lvl = logrus.DebugLevel
-	if lvl, err = logrus.ParseLevel(conf.Level); err != nil {
+	if lvl, err = logrus.ParseLevel(level); err != nil {
 		return
-	} else {
-		tmpLogger.Level = lvl
 	}
 
-	logger = tmpLogger
+	l := logrus.New()
 
-	p.loggers[name] = logger
+	l.Level = lvl
+	l.Out = out
+	l.Formatter = formatter
+	for i := 0; i < len(hooks); i++ {
+		l.Hooks.Add(hooks[i])
+	}
+
+	*logger = *l
 
 	return
 }
 
-func NewLogrusMate(mateConf LogrusMateConfig) (logrusMate *LogrusMate, err error) {
-	mate := new(LogrusMate)
+func NewLogrusMate(opts ...Option) (logrusMate *LogrusMate, err error) {
+	mate := &LogrusMate{
+		loggersConf: cmap.New(),
+		loggers:     cmap.New(),
+	}
 
-	if err = mate.initial(mateConf); err != nil {
+	hijackConf := newConfig(opts...)
+	conf := hijackConf.config
+
+	if conf.Root() == nil {
+		logrusMate = mate
 		return
+	}
+
+	loggerNames := conf.Root().GetObject().GetKeys()
+
+	for i := 0; i < len(loggerNames); i++ {
+		mate.loggersConf.SetIfAbsent(loggerNames[i], conf.GetConfig(loggerNames[i]))
 	}
 
 	logrusMate = mate
@@ -102,74 +139,55 @@ func NewLogrusMate(mateConf LogrusMateConfig) (logrusMate *LogrusMate, err error
 	return
 }
 
-func (p *LogrusMate) initial(mateConf LogrusMateConfig) (err error) {
-	p.loggersLock.Lock()
-	defer p.loggersLock.Unlock()
-
-	if err = mateConf.Validate(); err != nil {
+func (p *LogrusMate) Hijack(logger *logrus.Logger, loggerName string, opts ...Option) (err error) {
+	confV, exist := p.loggersConf.Get(loggerName)
+	if !exist {
+		err = ErrLoggerNotExist
 		return
 	}
 
-	p.loggers = make(map[string]*logrus.Logger, len(mateConf.Loggers))
+	conf := confV.(*configuration.Config)
 
-	p.initialOnce.Do(func() {
+	if len(opts) > 0 {
+		conf2 := newConfig(opts...)
+		conf2.config.WithFallback(conf)
+		err = hijackByConfig(logger, conf2.config)
+		return
+	}
 
-		runEnv := mateConf.RunEnv()
-
-		for _, loggerConfs := range mateConf.Loggers {
-			var conf LoggerConfig
-			if loggerConf, exist := loggerConfs.Config[runEnv]; exist {
-				conf = loggerConf
-			} else {
-				conf = defaultLoggerConfig()
-			}
-
-			if _, err = p.NewLogger(loggerConfs.Name, conf); err != nil {
-				return
-			}
-		}
-
-	})
+	err = hijackByConfig(logger, confV.(*configuration.Config))
 
 	return
 }
 
 func (p *LogrusMate) Logger(loggerName ...string) (logger *logrus.Logger) {
-	p.loggersLock.Lock()
-	defer p.loggersLock.Unlock()
+	name := "default"
 
-	name := ""
-	if loggerName != nil && len(loggerName) == 1 {
-		name = loggerName[0]
+	if len(loggerName) > 0 {
+		name = strings.TrimSpace(loggerName[0])
+		if len(name) == 0 {
+			name = "default"
+		}
 	}
 
-	logger, _ = p.loggers[name]
+	lv, exist := p.loggers.Get(name)
 
-	return
-}
-
-func defaultLogrusMate() (logrusMate *LogrusMate) {
-	if mate, err := NewLogrusMate(defaultLogrusMateConfig()); err != nil {
-		panic(err)
-	} else {
-		logrusMate = mate
+	if exist {
+		return lv.(*logrus.Logger)
 	}
-	return
-}
 
-func defaultLoggerConfig() LoggerConfig {
-	return LoggerConfig{
-		Level:     "debug",
-		Formatter: FormatterConfig{Name: "text", Options: nil},
+	confV, exist := p.loggersConf.Get(name)
+	if !exist {
+		return nil
 	}
-}
 
-func defaultLogrusMateConfig() LogrusMateConfig {
-	return LogrusMateConfig{
-		EnvironmentKeys: Environments{RunEnv: "development"},
-		Loggers: []LoggerItem{
-			{
-				Name:   "",
-				Config: map[string]LoggerConfig{"development": defaultLoggerConfig()}}},
+	l := logrus.New()
+
+	if err := hijackByConfig(l, confV.(*configuration.Config)); err != nil {
+		return nil
 	}
+
+	p.loggers.SetIfAbsent(name, l)
+
+	return l
 }

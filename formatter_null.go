@@ -11,7 +11,7 @@ func init() {
 	RegisterFormatter("null", NewNullFormatter)
 }
 
-func NewNullFormatter(options Options) (formatter logrus.Formatter, err error) {
+func NewNullFormatter(options *Options) (formatter logrus.Formatter, err error) {
 	formatter = &NullFormatter{}
 	return
 }

@@ -8,23 +8,29 @@ import (
 )
 
 type MailHookConfig struct {
-	AppName  string `json:"app_name"`
-	Host     string `json:"host"`
-	Port     int    `json:"port"`
-	From     string `json:"from"`
-	To       string `json:"to"`
-	Username string `json:"username"`
-	Password string `json:"password"`
+	AppName  string
+	Host     string
+	Port     int
+	From     string
+	To       string
+	Username string
+	Password string
 }
 
 func init() {
 	logrus_mate.RegisterHook("mail", NewMailHook)
 }
 
-func NewMailHook(options logrus_mate.Options) (hook logrus.Hook, err error) {
+func NewMailHook(options *logrus_mate.Options) (hook logrus.Hook, err error) {
 	conf := MailHookConfig{}
-	if err = options.ToObject(&conf); err != nil {
-		return
+	if options != nil {
+		conf.AppName = options.GetString("app-name")
+		conf.Host = options.GetString("host")
+		conf.Port = int(options.GetInt32("port"))
+		conf.From = options.GetString("from")
+		conf.To = options.GetString("to")
+		conf.Username = options.GetString("username")
+		conf.Password = options.GetString("password")
 	}
 
 	hook, err = logrus_mail.NewMailAuthHook(

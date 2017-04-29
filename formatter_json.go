@@ -12,13 +12,11 @@ func init() {
 	RegisterFormatter("json", NewJSONFormatter)
 }
 
-func NewJSONFormatter(options Options) (formatter logrus.Formatter, err error) {
-	conf := JSONFormatterConfig{}
-
-	if err = options.ToObject(&conf); err != nil {
-		return
+func NewJSONFormatter(options *Options) (formatter logrus.Formatter, err error) {
+	var format string
+	if options != nil {
+		format = options.GetString("timestamp_format")
 	}
-
-	formatter = &logrus.JSONFormatter{TimestampFormat: conf.TimestampFormat}
+	formatter = &logrus.JSONFormatter{TimestampFormat: format}
 	return
 }

@@ -2,6 +2,7 @@ package logrus_mate
 
 import (
 	"errors"
+	"github.com/go-akka/configuration"
 	"sort"
 	"sync"
 
@@ -17,7 +18,7 @@ var (
 	errHookNotRegistered = errors.New("logurs mate: hook not registerd")
 )
 
-type NewHookFunc func(Options) (hook logrus.Hook, err error)
+type NewHookFunc func(*Options) (hook logrus.Hook, err error)
 
 func RegisterHook(name string, newHookFunc NewHookFunc) {
 	hooksLocker.Lock()
@@ -49,7 +50,7 @@ func Hooks() []string {
 	return list
 }
 
-func NewHook(name string, options Options) (hook logrus.Hook, err error) {
+func NewHook(name string, conf *configuration.Config) (hook logrus.Hook, err error) {
 	hooksLocker.Lock()
 	defer hooksLocker.Unlock()
 
@@ -57,7 +58,7 @@ func NewHook(name string, options Options) (hook logrus.Hook, err error) {
 		err = errHookNotRegistered
 		return
 	} else {
-		hook, err = newHookFunc(options)
+		hook, err = newHookFunc(&Options{conf})
 	}
 
 	return

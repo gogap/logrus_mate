@@ -21,13 +21,13 @@ const (
 )
 
 type FileLogConifg struct {
-	Filename string `json:"filename"`
-	Maxlines int    `json:"maxlines"`
-	Maxsize  int    `json:"maxsize"`
-	Daily    bool   `json:"daily"`
-	Maxdays  int64  `json:"maxdays"`
-	Rotate   bool   `json:"rotate"`
-	Level    int    `json:"level"`
+	Filename string
+	Maxlines int
+	Maxsize  int
+	Daily    bool
+	Maxdays  int64
+	Rotate   bool
+	Level    int
 }
 
 // FileLogWriter implements LoggerInterface.

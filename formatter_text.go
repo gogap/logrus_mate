@@ -4,33 +4,24 @@ import (
 	"github.com/Sirupsen/logrus"
 )
 
-type TextFormatterConfig struct {
-	ForceColors      bool   `json:"force_colors"`
-	DisableColors    bool   `json:"disable_colors"`
-	DisableTimestamp bool   `json:"disable_timestamp"`
-	FullTimestamp    bool   `json:"full_timestamp"`
-	TimestampFormat  string `json:"timestamp_format"`
-	DisableSorting   bool   `json:"disable_sorting"`
-}
-
 func init() {
 	RegisterFormatter("text", NewTextFormatter)
 }
 
-func NewTextFormatter(options Options) (formatter logrus.Formatter, err error) {
-	conf := TextFormatterConfig{}
+func NewTextFormatter(options *Options) (formatter logrus.Formatter, err error) {
 
-	if err = options.ToObject(&conf); err != nil {
-		return
+	f := &logrus.TextFormatter{}
+
+	if options != nil {
+		f.ForceColors = options.GetBoolean("force-colors")
+		f.DisableColors = options.GetBoolean("disable-colors")
+		f.DisableTimestamp = options.GetBoolean("disable-timestamp")
+		f.FullTimestamp = options.GetBoolean("full-timestamp")
+		f.TimestampFormat = options.GetString("timestamp-format")
+		f.DisableSorting = options.GetBoolean("disable-sorting")
 	}
 
-	formatter = &logrus.TextFormatter{
-		ForceColors:      conf.ForceColors,
-		DisableColors:    conf.DisableColors,
-		DisableTimestamp: conf.DisableTimestamp,
-		FullTimestamp:    conf.FullTimestamp,
-		TimestampFormat:  conf.TimestampFormat,
-		DisableSorting:   conf.DisableSorting,
-	}
+	formatter = f
+
 	return
 }

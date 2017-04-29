@@ -10,20 +10,24 @@ import (
 )
 
 type SyslogHookConfig struct {
-	Network  string `json:"network"`
-	Address  string `json:"address"`
-	Priority string `json:"priority"`
-	Tag      string `json:"tag"`
+	Network  string
+	Address  string
+	Priority string
+	Tag      string
 }
 
 func init() {
 	logrus_mate.RegisterHook("syslog", NewSyslogHook)
 }
 
-func NewSyslogHook(options logrus_mate.Options) (hook logrus.Hook, err error) {
+func NewSyslogHook(options *logrus_mate.Options) (hook logrus.Hook, err error) {
 	conf := SyslogHookConfig{}
-	if err = options.ToObject(&conf); err != nil {
-		return
+
+	if options != nil {
+		conf.Network = options.GetString("network")
+		conf.Address = options.GetString("address")
+		conf.Priority = options.GetString("priority")
+		conf.Tag = options.GetString("tag")
 	}
 
 	return logrus_syslog.NewSyslogHook(

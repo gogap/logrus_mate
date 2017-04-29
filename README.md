@@ -1,28 +1,39 @@
 # Logrus Mate <img src="http://i.imgur.com/hTeVwmJ.png" width="40" height="40" alt=":walrus:" class="emoji" title=":walrus:"/>
 
-**Logrus mate** is a tool for [Logrus](https://github.com/Sirupsen/logrus), it will help you to initial logger by config, including `Formatter`, `Hook`，`Level`, `Output` and `Environments`.
+**Logrus mate** is a tool for [Logrus](https://github.com/Sirupsen/logrus), it will help you to initial logger by config, including `Formatter`, `Hook`，`Level` and `Output` .
+
+> If you more prefer old version, you could checkout tag v1.0.0
 
 #### Example
 
 **Example 1:**
 
-Using internal default logrus mate:
+Hijack `logrus.StandardLogger()`
 
 ```go
 package main
 
 import (
+    "github.com/Sirupsen/logrus"
     "github.com/gogap/logrus_mate"
 )
 
 func main() {
-    logrus_mate.Logger().Infoln("Using internal defualt logurs mate")
+    logrus_mate.Hijack(
+        logrus.StandardLogger(),
+        logrus_mate.ConfigString(
+            `{formatter.name = "json"}`,
+        ),
+    )
+    
+    logrus.WithField("Field", "A").Debugln("Hello JSON")
 }
+
 ```
 
 **Example 2:**
 
-Create new logger:
+Create new logger from mate:
 
 ```go
 package main
@@ -32,120 +43,123 @@ import (
 )
 
 func main() {
-    loggerConf := logrus_mate.LoggerConfig{
-        Level: "info",
-        Formatter: logrus_mate.FormatterConfig{
-            Name: "json",
-        },
-    }
+    mate, _ := logrus_mate.NewLogrusMate(
+        logrus_mate.ConfigString(
+            `{ mike {formatter.name = "json"} }`,
+        ),
+    )
     
-    // package level
-    if jackLogger, err := logrus_mate.NewLogger("jack", loggerConf); err != nil {
-        return
-    } else {
-        jackLogger.Infoln("hello logurs")
-    }
-
-    // so, the jack added into internal logurs mate
-    logrus_mate.Logger("jack").Debugln("not print")
-    logrus_mate.Logger("jack").Infoln("Hello, I am A Logger from jack")
+    mikeLoger := mate.Logger("mike")
+    mikeLoger.Errorln("Hello Error Level from Mike and my formatter is json")
 }
 ```
 
 **Example 3:**
 
-Create logurs mate from config file (also you could fill config struct manually):
-
-```bash
-export RUN_MODE=production
-```
-
-`mate.conf`
-```json
-{
-    "env_keys": {
-        "run_env": "RUN_MODE"
-    },
-    "loggers": [{
-        "name": "mike",
-        "config": {
-            "production": {
-                "out": {
-                    "name": "stderr",
-                    "options":{}
-                },
-                "level": "error",
-                "formatter": {
-                    "name": "json"
-                },
-                "hooks": [{
-                    "name": "syslog",
-                    "options": {
-                        "network": "udp",
-                        "address": "localhost:514",
-                        "priority": "LOG_ERR",
-                        "tag": ""
-                    }
-                }]
-            }
-        }
-    }]
-}
-```
+Hi jack logger by mate
 
 ```go
 package main
 
-import (    
+import (
+    "github.com/Sirupsen/logrus"
     "github.com/gogap/logrus_mate"
-    _ "github.com/gogap/logrus_mate/hooks/syslog"
 )
 
 func main() {
-    if mateConf, err := logrus_mate.LoadLogrusMateConfig("mate.conf"); err != nil {
-        return
-    } else {
-        if newMate, err := logrus_mate.NewLogrusMate(mateConf); err != nil {
-            return
-        } else {
-            newMate.Logger("mike").Errorln("I am mike in new logrus mate")
-        }
-    }
+    mate, _ := logrus_mate.NewLogrusMate(
+        logrus_mate.ConfigString(
+            `{ mike {formatter.name = "json"} }`,
+        ),
+    )
+
+    mate.Hijack(
+        logrus.StandardLogger(),
+        "mike",
+    )
+    
+    logrus.Println("hello std logger is hijack by mike")
 }
 ```
 
-> In this example, we used the syslog hook, so we should import package of syslog
+**Example 4:**
 
-``` go
-import _ "github.com/gogap/logrus_mate/hooks/syslog"
-```
-
-logrus mate support environments notion, same logger could have different environment config, the above `mate.conf` only have `production` config, so if `RUN_MODE` is `production`, it will use this section's options, or else, there have no loggers generate.
-
-#### Environments
-
-different environment could have own `level`, `hooks` and `formatters`, logrus mate have `Environments` config for create the instance, you can see the above config file of `mate.conf`
+Fallback the ConfigString
 
 ```go
-type Environments struct {
-    RunEnv  string `json:"run_env"`
+package main
+
+import (
+    "github.com/Sirupsen/logrus"
+    "github.com/gogap/logrus_mate"
+)
+
+func main() {
+    mate, _ := logrus_mate.NewLogrusMate(
+        logrus_mate.ConfigString(
+            `{ mike {formatter.name = "json"} }`,
+        ),
+        logrus_mate.ConfigFile(
+            "mate.conf", // { mike {formatter.name = "text"} }
+        ),
+    )
+
+    mate.Hijack(
+        logrus.StandardLogger(),
+        "mike",
+    )
+    
+    logrus.Println("hello std logger is hijack by mike")
 }
 ```
 
-`run_env`: this filed is the key of run env, it will get actual value from environment by this key.
+** the `json` formatter is used**
 
-> The json config file will be compile with package of `gogap/env_json` while you use func `logrus_mate.LoadLogrusMateConfig`, please forward to the project of [env_json](https://github.com/gogap/env_json) to known more details.
+**Example 5:**
+
+Fallback config while hijack
+
+```go
+package main
+
+import (
+    "github.com/Sirupsen/logrus"
+    "github.com/gogap/logrus_mate"
+)
+
+func main() {
+    mate, _ := logrus_mate.NewLogrusMate(
+        logrus_mate.ConfigFile(
+            "mate.conf", // { mike {formatter.name = "text"} }
+        ),
+    )
+
+    mate.Hijack(logrus.StandardLogger(),
+        "mike",
+        logrus_mate.ConfigString(
+            `{formatter.name = "json"}`,
+        ),
+    )
+
+    logrus.Errorln("hello std logger is hijack by mike")
+}
+```
+
+** the `json` formatter is used**
+
+> currently we are using https://github.com/go-akka/configuration for logger config, it will more powerful config format for human read
 
 #### Hooks
 | Hook  | Options |
 | ----- | ----------- |
-| [Airbrake](https://github.com/gemnasium/logrus-airbrake-hook) | `project_id` `api_key` `env`|
+| [Airbrake](https://github.com/gemnasium/logrus-airbrake-hook) | `project-id` `api-key` `env`|
 | [Syslog](https://github.com/Sirupsen/logrus/blob/master/hooks/syslog/syslog.go) | `network` `address` `priority` `tag`|
-| [BugSnag](https://github.com/Sirupsen/logrus/blob/master/hooks/bugsnag/bugsnag.go) | `api_key` |
+| [BugSnag](https://github.com/Sirupsen/logrus/blob/master/hooks/bugsnag/bugsnag.go) | `api-key` |
 | [Slackrus](https://github.com/johntdyer/slackrus) | `url` `levels` `channel` `emoji` `username`|
 | [Graylog](https://github.com/gemnasium/logrus-graylog-hook) | `address` `facility` `extra`|
-| [Mail](https://github.com/zbindenren/logrus_mail) | `app_name` `host` `port` `from` `to` `username` `password`|
-| [Logstash](https://github.com/bshuster-repo/logrus-logstash-hook) | `app_name` `protocol` `address` `always_sent_fields` `prefix`|
+| [Mail](https://github.com/zbindenren/logrus_mail) | `app-name` `host` `port` `from` `to` `username` `password`|
+| [Logstash](https://github.com/bshuster-repo/logrus-logstash-hook) | `app-name` `protocol` `address` `always-sent-fields` `prefix`|
+| File | `filename` `max-lines` `max-size` `daily` `max-days` `rotate` `level`|
 
 When we need use above hooks, we need import these package as follow:
 
@@ -164,17 +178,17 @@ import (
 )
 
 type MyHookConfig struct {
-    Address  string `json:"address"`
+    Address  string
 }
 
 func init() {
     logrus_mate.RegisterHook("myhook", NewMyHook)
 }
 
-func NewMyHook(options logrus_mate.Options) (hook logrus.Hook, err error) {
+func NewMyHook(options *logrus_mate.Options) (hook logrus.Hook, err error) {
     conf := MyHookConfig{}
-    if err = options.ToObject(&conf); err != nil {
-        return
+    if options!=nil {
+        conf.Address = options.GetString("address")
     }
 
     // write your hook logic code here
@@ -191,8 +205,8 @@ func NewMyHook(options logrus_mate.Options) (hook logrus.Hook, err error) {
 | Formatter  | Options |Output Example |
 | ----- | ----------- | ----------- |
 |null|||
-|text|`force_colors` `disable_colors` `disable_timestamp` `full_timestamp` `timestamp_format` `disable_sorting`|DEBU[0000] Hello Default Logrus Mate|
-|json|`timestamp_format`|{"level":"info","msg":"Hello, I am A Logger from jack","time":"2015-10-18T21:24:19+08:00"}|
+|text|`force-colors` `disable-colors` `disable-timestamp` `full-timestamp` `timestamp-format` `disable-sorting`|DEBU[0000] Hello Default Logrus Mate|
+|json|`timestamp-format`|{"level":"info","msg":"Hello, I am A Logger from jack","time":"2015-10-18T21:24:19+08:00"}|
 
 **3rd formatters:**
 
@@ -223,10 +237,10 @@ func init() {
     logrus_mate.RegisterFormatter("myformatter", NewMyFormatter)
 }
 
-func NewMyFormatter(options logrus_mate.Options) (formatter logrus.Formatter, err error) {
+func NewMyFormatter(options *logrus_mate.Options) (formatter logrus.Formatter, err error) {
     conf := MyFormatterConfig{}
-    if err = options.ToObject(&conf); err != nil {
-        return
+    if options!=nil {
+        conf.Address=options.GetString("address")
     }
 
     // write your formatter logic code here
@@ -274,10 +288,10 @@ func init() {
     logrus_mate.RegisterWriter("mywriter", NewMyWriter)
 }
 
-func NewMyWriter(options logrus_mate.Options) (writer io.Writer, err error) {
+func NewMyWriter(options *logrus_mate.Options) (writer io.Writer, err error) {
     conf := MyWriterConfig{}
-    if err = options.ToObject(&conf); err != nil {
-        return
+    if options!=nil {
+        conf.Address=options.GetString("address")
     }
 
     // write your writer logic code here

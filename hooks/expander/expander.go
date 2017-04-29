@@ -14,7 +14,7 @@ func init() {
 	logrus_mate.RegisterHook("expander", NewExpanderHook)
 }
 
-func NewExpanderHook(options logrus_mate.Options) (hook logrus.Hook, err error) {
+func NewExpanderHook(options *logrus_mate.Options) (hook logrus.Hook, err error) {
 	hook = &ExpanderHook{}
 	return
 }

@@ -8,25 +8,29 @@ import (
 )
 
 type AirbrakeHookConfig struct {
-	ProjectId int    `json:"project_id"`
-	APIKey    string `json:"api_key"`
-	Env       string `json:"env"`
+	ProjectId int64
+	APIKey    string
+	Env       string
 }
 
 func init() {
 	logrus_mate.RegisterHook("airbrake", NewAirbrakeHook)
 }
 
-func NewAirbrakeHook(options logrus_mate.Options) (hook logrus.Hook, err error) {
+func NewAirbrakeHook(options *logrus_mate.Options) (hook logrus.Hook, err error) {
+
 	conf := AirbrakeHookConfig{}
-	if err = options.ToObject(&conf); err != nil {
-		return
+	if options != nil {
+		conf.ProjectId = options.GetInt64("project-id")
+		conf.APIKey = options.GetString("api-key")
+		conf.Env = options.GetString("env")
 	}
 
 	hook = airbrake.NewHook(
-		int64(conf.ProjectId),
+		conf.ProjectId,
 		conf.APIKey,
-		conf.Env)
+		conf.Env,
+	)
 
 	return
 }
