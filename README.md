@@ -113,7 +113,7 @@ func main() {
 }
 ```
 
-** the `json` formatter is used**
+ **the `json` formatter is used**
 
 **Example 5:**
 
@@ -145,7 +145,7 @@ func main() {
 }
 ```
 
-** the `json` formatter is used**
+**the `json` formatter is used**
 
 > currently we are using https://github.com/go-akka/configuration for logger config, it will more powerful config format for human read
 
@@ -160,6 +160,7 @@ func main() {
 | [Mail](https://github.com/zbindenren/logrus_mail) | `app-name` `host` `port` `from` `to` `username` `password`|
 | [Logstash](https://github.com/bshuster-repo/logrus-logstash-hook) | `app-name` `protocol` `address` `always-sent-fields` `prefix`|
 | File | `filename` `max-lines` `max-size` `daily` `max-days` `rotate` `level`|
+| BearyChat | `url` `levels` `channel` `user` `markdown` `async`|
 
 When we need use above hooks, we need import these package as follow:
 

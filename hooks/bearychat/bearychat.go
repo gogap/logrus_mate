@@ -2,9 +2,9 @@ package bearychat
 
 import (
 	"fmt"
-	"github.com/Sirupsen/logrus"
-	"github.com/gogap/bearychat/incoming"
 
+	"github.com/Sirupsen/logrus"
+	"github.com/gogap/bearychat"
 	"github.com/gogap/logrus_mate"
 )
 
@@ -18,8 +18,7 @@ var allLevels = []logrus.Level{
 }
 
 type BearyChatHookConfig struct {
-	RobotId  string
-	Token    string
+	Url      string
 	Levels   []string
 	Channel  string
 	User     string
@@ -35,8 +34,7 @@ func NewBearyChatHook(options *logrus_mate.Options) (hook logrus.Hook, err error
 	conf := BearyChatHookConfig{}
 
 	if options != nil {
-		conf.RobotId = options.GetString("robot-id")
-		conf.Token = options.GetString("token")
+		conf.Url = options.GetString("url")
 		conf.Levels = options.GetStringList("levels")
 		conf.Channel = options.GetString("channel")
 		conf.User = options.GetString("user")
@@ -62,14 +60,13 @@ func NewBearyChatHook(options *logrus_mate.Options) (hook logrus.Hook, err error
 	}
 
 	hook = &BearyChatHook{
-		RobotId:        conf.RobotId,
-		Token:          conf.Token,
+		Url:            conf.Url,
 		AcceptedLevels: levels,
 		Channel:        conf.Channel,
 		User:           conf.User,
 		Markdown:       conf.Markdown,
 		Async:          conf.Async,
-		cli:            incoming.NewClient(),
+		cli:            bearychat.NewIncomingClient(),
 	}
 
 	return
@@ -77,14 +74,13 @@ func NewBearyChatHook(options *logrus_mate.Options) (hook logrus.Hook, err error
 
 type BearyChatHook struct {
 	AcceptedLevels []logrus.Level
-	RobotId        string
-	Token          string
+	Url            string
 	Channel        string
 	User           string
 	Markdown       bool
 	Async          bool
 
-	cli *incoming.Client
+	cli *bearychat.IncomingClient
 }
 
 // Levels sets which levels to sent to slack
@@ -109,19 +105,19 @@ func (p *BearyChatHook) Fire(e *logrus.Entry) (err error) {
 		color = "#FFFF00"
 	}
 
-	req := &incoming.Request{
+	req := &bearychat.Message{
 		Text:     e.Message,
 		Markdown: p.Markdown,
 		Channel:  p.Channel,
 		User:     p.User,
 	}
 
-	var attachs []incoming.Attachment
+	var attachs []bearychat.Attachment
 
 	if len(e.Data) > 0 {
 
 		for k, v := range e.Data {
-			attach := incoming.Attachment{}
+			attach := bearychat.Attachment{}
 
 			attach.Title = k
 			attach.Text = fmt.Sprint(v)
@@ -134,10 +130,10 @@ func (p *BearyChatHook) Fire(e *logrus.Entry) (err error) {
 	req.Attachments = attachs
 
 	if p.Async {
-		go p.cli.Send(p.RobotId, p.Token, req)
+		go p.cli.Send(p.Url, req)
 		return
 	}
 
-	_, err = p.cli.Send(p.RobotId, p.Token, req)
+	_, err = p.cli.Send(p.Url, req)
 	return
 }
