@@ -16,14 +16,14 @@ func init() {
 	logrus_mate.RegisterHook("graylog", NewGraylogHook)
 }
 
-func NewGraylogHook(options *logrus_mate.Options) (hook logrus.Hook, err error) {
+func NewGraylogHook(config logrus_mate.Configuration) (hook logrus.Hook, err error) {
 	conf := GraylogHookConfig{}
 
-	if options != nil {
-		conf.Address = options.GetString("address")
+	if config != nil {
+		conf.Address = config.GetString("address")
 
-		extraConf := options.GetConfig("extra")
-		keys := extraConf.Root().GetObject().GetKeys()
+		extraConf := config.GetConfig("extra")
+		keys := extraConf.Keys()
 		extra := make(map[string]interface{}, len(keys))
 
 		for i := 0; i < len(keys); i++ {

@@ -16,7 +16,7 @@ var (
 	errWriterNotRegistered = errors.New("writer not registerd")
 )
 
-type NewWriterFunc func(*Options) (writer io.Writer, err error)
+type NewWriterFunc func(Configuration) (writer io.Writer, err error)
 
 func RegisterWriter(name string, newWriterFunc NewWriterFunc) {
 	writersLocker.Lock()
@@ -48,7 +48,7 @@ func Writers() []string {
 	return list
 }
 
-func NewWriter(name string, optsion *Options) (writer io.Writer, err error) {
+func NewWriter(name string, config Configuration) (writer io.Writer, err error) {
 	writersLocker.Lock()
 	defer writersLocker.Unlock()
 
@@ -56,7 +56,7 @@ func NewWriter(name string, optsion *Options) (writer io.Writer, err error) {
 		err = errWriterNotRegistered
 		return
 	} else {
-		writer, err = newWriterFunc(optsion)
+		writer, err = newWriterFunc(config)
 	}
 
 	return

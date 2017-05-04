@@ -19,15 +19,15 @@ func init() {
 	logrus_mate.RegisterHook("slack", NewSlackHook)
 }
 
-func NewSlackHook(options *logrus_mate.Options) (hook logrus.Hook, err error) {
+func NewSlackHook(config logrus_mate.Configuration) (hook logrus.Hook, err error) {
 	conf := SlackHookConfig{}
 
-	if options != nil {
-		conf.URL = options.GetString("url")
-		conf.Levels = options.GetStringList("levels")
-		conf.Channel = options.GetString("channel")
-		conf.Emoji = options.GetString("emoji")
-		conf.Username = options.GetString("username")
+	if config != nil {
+		conf.URL = config.GetString("url")
+		conf.Levels = config.GetStringList("levels")
+		conf.Channel = config.GetString("channel")
+		conf.Emoji = config.GetString("emoji")
+		conf.Username = config.GetString("username")
 	}
 
 	levels := []logrus.Level{}

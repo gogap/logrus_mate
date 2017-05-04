@@ -17,18 +17,18 @@ func init() {
 	logrus_mate.RegisterHook("file", NewFileHook)
 }
 
-func NewFileHook(options *logrus_mate.Options) (hook logrus.Hook, err error) {
+func NewFileHook(config logrus_mate.Configuration) (hook logrus.Hook, err error) {
 
 	conf := FileLogConifg{}
 
-	if options != nil {
-		conf.Filename = options.GetString("filename")
-		conf.Maxlines = int(options.GetInt64("max-lines"))
-		conf.Maxsize = int(options.GetInt64("max-size"))
-		conf.Daily = options.GetBoolean("daily")
-		conf.Maxdays = options.GetInt64("max-days")
-		conf.Rotate = options.GetBoolean("rotate")
-		conf.Level = int(options.GetInt32("level"))
+	if config != nil {
+		conf.Filename = config.GetString("filename")
+		conf.Maxlines = int(config.GetInt64("max-lines"))
+		conf.Maxsize = int(config.GetInt64("max-size"))
+		conf.Daily = config.GetBoolean("daily")
+		conf.Maxdays = config.GetInt64("max-days")
+		conf.Rotate = config.GetBoolean("rotate")
+		conf.Level = int(config.GetInt32("level"))
 	}
 
 	path := strings.Split(conf.Filename, "/")
