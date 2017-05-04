@@ -8,17 +8,17 @@ func init() {
 	RegisterFormatter("text", NewTextFormatter)
 }
 
-func NewTextFormatter(options *Options) (formatter logrus.Formatter, err error) {
+func NewTextFormatter(config Configuration) (formatter logrus.Formatter, err error) {
 
 	f := &logrus.TextFormatter{}
 
-	if options != nil {
-		f.ForceColors = options.GetBoolean("force-colors")
-		f.DisableColors = options.GetBoolean("disable-colors")
-		f.DisableTimestamp = options.GetBoolean("disable-timestamp")
-		f.FullTimestamp = options.GetBoolean("full-timestamp")
-		f.TimestampFormat = options.GetString("timestamp-format")
-		f.DisableSorting = options.GetBoolean("disable-sorting")
+	if config != nil {
+		f.ForceColors = config.GetBoolean("force-colors")
+		f.DisableColors = config.GetBoolean("disable-colors")
+		f.DisableTimestamp = config.GetBoolean("disable-timestamp")
+		f.FullTimestamp = config.GetBoolean("full-timestamp")
+		f.TimestampFormat = config.GetString("timestamp-format")
+		f.DisableSorting = config.GetBoolean("disable-sorting")
 	}
 
 	formatter = f

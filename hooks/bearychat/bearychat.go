@@ -30,16 +30,16 @@ func init() {
 	logrus_mate.RegisterHook("bearychat", NewBearyChatHook)
 }
 
-func NewBearyChatHook(options *logrus_mate.Options) (hook logrus.Hook, err error) {
+func NewBearyChatHook(config logrus_mate.Configuration) (hook logrus.Hook, err error) {
 	conf := BearyChatHookConfig{}
 
-	if options != nil {
-		conf.Url = options.GetString("url")
-		conf.Levels = options.GetStringList("levels")
-		conf.Channel = options.GetString("channel")
-		conf.User = options.GetString("user")
-		conf.Markdown = options.GetBoolean("markdown")
-		conf.Async = options.GetBoolean("async", true)
+	if config != nil {
+		conf.Url = config.GetString("url")
+		conf.Levels = config.GetStringList("levels")
+		conf.Channel = config.GetString("channel")
+		conf.User = config.GetString("user")
+		conf.Markdown = config.GetBoolean("markdown")
+		conf.Async = config.GetBoolean("async", true)
 	}
 
 	levels := []logrus.Level{}

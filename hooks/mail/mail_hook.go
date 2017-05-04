@@ -21,16 +21,16 @@ func init() {
 	logrus_mate.RegisterHook("mail", NewMailHook)
 }
 
-func NewMailHook(options *logrus_mate.Options) (hook logrus.Hook, err error) {
+func NewMailHook(config logrus_mate.Configuration) (hook logrus.Hook, err error) {
 	conf := MailHookConfig{}
-	if options != nil {
-		conf.AppName = options.GetString("app-name")
-		conf.Host = options.GetString("host")
-		conf.Port = int(options.GetInt32("port"))
-		conf.From = options.GetString("from")
-		conf.To = options.GetString("to")
-		conf.Username = options.GetString("username")
-		conf.Password = options.GetString("password")
+	if config != nil {
+		conf.AppName = config.GetString("app-name")
+		conf.Host = config.GetString("host")
+		conf.Port = int(config.GetInt32("port"))
+		conf.From = config.GetString("from")
+		conf.To = config.GetString("to")
+		conf.Username = config.GetString("username")
+		conf.Password = config.GetString("password")
 	}
 
 	hook, err = logrus_mail.NewMailAuthHook(

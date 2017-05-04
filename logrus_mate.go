@@ -6,13 +6,8 @@ import (
 	"strings"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/go-akka/configuration"
 	"github.com/orcaman/concurrent-map"
 )
-
-type Options struct {
-	*configuration.Config
-}
 
 var (
 	ErrLoggerNotExist = errors.New("logger not exist")
@@ -39,7 +34,10 @@ func Hijack(logger *logrus.Logger, opts ...Option) (err error) {
 	return hijackByConfig(logger, conf)
 }
 
-func hijackByConfig(logger *logrus.Logger, conf *configuration.Config) (err error) {
+func hijackByConfig(logger *logrus.Logger, conf Configuration) (err error) {
+	if conf == nil {
+		return
+	}
 
 	outConf := conf.GetConfig("out")
 	formatterConf := conf.GetConfig("formatter")
@@ -47,7 +45,7 @@ func hijackByConfig(logger *logrus.Logger, conf *configuration.Config) (err erro
 	outName := "stdout"
 	formatterName := "text"
 
-	var outOptionsConf, formatterOptionsConf *configuration.Config
+	var outOptionsConf, formatterOptionsConf Configuration
 
 	if outConf != nil {
 		outName = outConf.GetString("name", "stdout")
@@ -60,20 +58,12 @@ func hijackByConfig(logger *logrus.Logger, conf *configuration.Config) (err erro
 	}
 
 	var out io.Writer
-	var outOptions *Options
-	if outOptionsConf != nil {
-		outOptions = &Options{outOptionsConf}
-	}
-	if out, err = NewWriter(outName, outOptions); err != nil {
+	if out, err = NewWriter(outName, outOptionsConf); err != nil {
 		return
 	}
 
 	var formatter logrus.Formatter
-	var formatterOptions *Options
-	if formatterOptionsConf != nil {
-		formatterOptions = &Options{formatterOptionsConf}
-	}
-	if formatter, err = NewFormatter(formatterName, formatterOptions); err != nil {
+	if formatter, err = NewFormatter(formatterName, formatterOptionsConf); err != nil {
 		return
 	}
 
@@ -82,7 +72,7 @@ func hijackByConfig(logger *logrus.Logger, conf *configuration.Config) (err erro
 	confHooks := conf.GetConfig("hooks")
 
 	if confHooks != nil {
-		hookNames := confHooks.Root().GetObject().GetKeys()
+		hookNames := confHooks.Keys()
 
 		for i := 0; i < len(hookNames); i++ {
 			var hook logrus.Hook
@@ -123,12 +113,12 @@ func NewLogrusMate(opts ...Option) (logrusMate *LogrusMate, err error) {
 	hijackConf := newConfig(opts...)
 	conf := hijackConf.config
 
-	if conf.Root() == nil {
+	if conf == nil {
 		logrusMate = mate
 		return
 	}
 
-	loggerNames := conf.Root().GetObject().GetKeys()
+	loggerNames := conf.Keys()
 
 	for i := 0; i < len(loggerNames); i++ {
 		mate.loggersConf.SetIfAbsent(loggerNames[i], conf.GetConfig(loggerNames[i]))
@@ -146,7 +136,7 @@ func (p *LogrusMate) Hijack(logger *logrus.Logger, loggerName string, opts ...Op
 		return
 	}
 
-	conf := confV.(*configuration.Config)
+	conf := confV.(Configuration)
 
 	if len(opts) > 0 {
 		conf2 := newConfig(opts...)
@@ -155,7 +145,7 @@ func (p *LogrusMate) Hijack(logger *logrus.Logger, loggerName string, opts ...Op
 		return
 	}
 
-	err = hijackByConfig(logger, confV.(*configuration.Config))
+	err = hijackByConfig(logger, confV.(Configuration))
 
 	return
 }
@@ -183,7 +173,7 @@ func (p *LogrusMate) Logger(loggerName ...string) (logger *logrus.Logger) {
 
 	l := logrus.New()
 
-	if err := hijackByConfig(l, confV.(*configuration.Config)); err != nil {
+	if err := hijackByConfig(l, confV.(Configuration)); err != nil {
 		return nil
 	}
 

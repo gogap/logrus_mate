@@ -12,15 +12,15 @@ func init() {
 	logrus_mate.RegisterHook("bugsnag", NewBugsnagHook)
 }
 
-func NewBugsnagHook(options *logrus_mate.Options) (hook logrus.Hook, err error) {
+func NewBugsnagHook(config logrus_mate.Configuration) (hook logrus.Hook, err error) {
 
-	if options != nil {
+	if config != nil {
 		bugsnag.Configure(
 			bugsnag.Configuration{
-				Endpoint:     options.GetString("endpoint"),
-				ReleaseStage: options.GetString("release-stage"),
-				APIKey:       options.GetString("api-key"),
-				Synchronous:  options.GetBoolean("synchronous"),
+				Endpoint:     config.GetString("endpoint"),
+				ReleaseStage: config.GetString("release-stage"),
+				APIKey:       config.GetString("api-key"),
+				Synchronous:  config.GetBoolean("synchronous"),
 			})
 	}
 

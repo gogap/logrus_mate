@@ -22,15 +22,15 @@ func init() {
 	logrus_mate.RegisterWriter("redisio", NewRedisIOWriter)
 }
 
-func NewRedisIOWriter(options *logrus_mate.Options) (writer io.Writer, err error) {
+func NewRedisIOWriter(config logrus_mate.Configuration) (writer io.Writer, err error) {
 	conf := RedisIOConfig{}
 
-	if options != nil {
-		conf.Network = options.GetString("network")
-		conf.Address = options.GetString("address")
-		conf.Password = options.GetString("password")
-		conf.Db = options.GetInt64("db")
-		conf.ListName = options.GetString("list-name")
+	if config != nil {
+		conf.Network = config.GetString("network")
+		conf.Address = config.GetString("address")
+		conf.Password = config.GetString("password")
+		conf.Db = config.GetInt64("db")
+		conf.ListName = config.GetString("list-name")
 	}
 
 	if conf.ListName == "" {

@@ -147,7 +147,8 @@ func main() {
 
 **the `json` formatter is used**
 
-> currently we are using https://github.com/go-akka/configuration for logger config, it will more powerful config format for human read
+> currently we are using https://github.com/go-akka/configuration for logger config, it will more powerful config format for human read, 
+you also could set your own config provider
 
 #### Hooks
 | Hook  | Options |
@@ -186,10 +187,10 @@ func init() {
     logrus_mate.RegisterHook("myhook", NewMyHook)
 }
 
-func NewMyHook(options *logrus_mate.Options) (hook logrus.Hook, err error) {
+func NewMyHook(config logrus_mate.Configuration) (hook logrus.Hook, err error) {
     conf := MyHookConfig{}
-    if options!=nil {
-        conf.Address = options.GetString("address")
+    if config!=nil {
+        conf.Address = config.GetString("address")
     }
 
     // write your hook logic code here
@@ -238,10 +239,10 @@ func init() {
     logrus_mate.RegisterFormatter("myformatter", NewMyFormatter)
 }
 
-func NewMyFormatter(options *logrus_mate.Options) (formatter logrus.Formatter, err error) {
+func NewMyFormatter(config logrus_mate.Configuration) (formatter logrus.Formatter, err error) {
     conf := MyFormatterConfig{}
-    if options!=nil {
-        conf.Address=options.GetString("address")
+    if config!=nil {
+        conf.Address=config.GetString("address")
     }
 
     // write your formatter logic code here
@@ -289,14 +290,80 @@ func init() {
     logrus_mate.RegisterWriter("mywriter", NewMyWriter)
 }
 
-func NewMyWriter(options *logrus_mate.Options) (writer io.Writer, err error) {
+func NewMyWriter(config logrus_mate.Configuration) (writer io.Writer, err error) {
     conf := MyWriterConfig{}
-    if options!=nil {
-        conf.Address=options.GetString("address")
+    if config!=nil {
+        conf.Address=config.GetString("address")
     }
 
     // write your writer logic code here
 
     return
+}
+```
+
+#### Config Provider
+
+The default config provider is `HOCON`, you could use your own config provider, just implement the following interface{}
+
+```go
+type ConfigurationProvider interface {
+    LoadConfig(filename string) Configuration
+    ParseString(cfgStr string) Configuration
+}
+
+type Configuration interface {
+    GetBoolean(path string, defaultVal ...bool) bool
+    GetByteSize(path string) *big.Int
+    GetInt32(path string, defaultVal ...int32) int32
+    GetInt64(path string, defaultVal ...int64) int64
+    GetString(path string, defaultVal ...string) string
+    GetFloat32(path string, defaultVal ...float32) float32
+    GetFloat64(path string, defaultVal ...float64) float64
+    GetTimeDuration(path string, defaultVal ...time.Duration) time.Duration
+    GetTimeDurationInfiniteNotAllowed(path string, defaultVal ...time.Duration) time.Duration
+    GetBooleanList(path string) []bool
+    GetFloat32List(path string) []float32
+    GetFloat64List(path string) []float64
+    GetInt32List(path string) []int32
+    GetInt64List(path string) []int64
+    GetByteList(path string) []byte
+    GetStringList(path string) []string
+    GetConfig(path string) Configuration
+    WithFallback(fallback Configuration)
+    HasPath(path string) bool
+    Keys() []string
+}
+```
+
+**set your own config provider**
+
+```go
+package main
+
+import (
+    "github.com/Sirupsen/logrus"
+    "github.com/gogap/logrus_mate"
+)
+
+func main() {
+    mate, _ := logrus_mate.NewLogrusMate(
+        logrus_mate.ConfigString(
+            `{ mike {formatter.name = "json"} }`,
+        ),
+        logrus_mate.ConfigFile(
+            "mate.conf", // { mike {formatter.name = "text"} }
+        ),
+        logrus_mate.ConfigProvider(
+            &logrus_mate.HOCONConfigProvider{}, // this is defualt provider if you did not configurate
+        ),
+    )
+
+    mate.Hijack(
+        logrus.StandardLogger(),
+        "mike",
+    )
+    
+    logrus.Println("hello std logger is hijack by mike")
 }
 ```

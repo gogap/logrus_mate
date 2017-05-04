@@ -20,14 +20,14 @@ func init() {
 	logrus_mate.RegisterHook("syslog", NewSyslogHook)
 }
 
-func NewSyslogHook(options *logrus_mate.Options) (hook logrus.Hook, err error) {
+func NewSyslogHook(config logrus_mate.Configuration) (hook logrus.Hook, err error) {
 	conf := SyslogHookConfig{}
 
-	if options != nil {
-		conf.Network = options.GetString("network")
-		conf.Address = options.GetString("address")
-		conf.Priority = options.GetString("priority")
-		conf.Tag = options.GetString("tag")
+	if config != nil {
+		conf.Network = config.GetString("network")
+		conf.Address = config.GetString("address")
+		conf.Priority = config.GetString("priority")
+		conf.Tag = config.GetString("tag")
 	}
 
 	return logrus_syslog.NewSyslogHook(

@@ -18,17 +18,17 @@ func init() {
 	logrus_mate.RegisterHook("logstash", NewLogstashHook)
 }
 
-func NewLogstashHook(options *logrus_mate.Options) (hook logrus.Hook, err error) {
+func NewLogstashHook(config logrus_mate.Configuration) (hook logrus.Hook, err error) {
 	conf := LogstashHookConfig{}
 
-	if options != nil {
-		conf.AppName = options.GetString("app-name")
-		conf.Protocol = options.GetString("protocol")
-		conf.Address = options.GetString("address")
-		conf.Prefix = options.GetString("prefix")
+	if config != nil {
+		conf.AppName = config.GetString("app-name")
+		conf.Protocol = config.GetString("protocol")
+		conf.Address = config.GetString("address")
+		conf.Prefix = config.GetString("prefix")
 
-		alwaysSentFieldsConf := options.GetConfig("always-sent-fields")
-		keys := alwaysSentFieldsConf.Root().GetObject().GetKeys()
+		alwaysSentFieldsConf := config.GetConfig("always-sent-fields")
+		keys := alwaysSentFieldsConf.Keys()
 		fields := make(logrus.Fields, len(keys))
 
 		for i := 0; i < len(keys); i++ {

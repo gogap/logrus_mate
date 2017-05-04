@@ -17,13 +17,13 @@ func init() {
 	logrus_mate.RegisterHook("airbrake", NewAirbrakeHook)
 }
 
-func NewAirbrakeHook(options *logrus_mate.Options) (hook logrus.Hook, err error) {
+func NewAirbrakeHook(config logrus_mate.Configuration) (hook logrus.Hook, err error) {
 
 	conf := AirbrakeHookConfig{}
-	if options != nil {
-		conf.ProjectId = options.GetInt64("project-id")
-		conf.APIKey = options.GetString("api-key")
-		conf.Env = options.GetString("env")
+	if config != nil {
+		conf.ProjectId = config.GetInt64("project-id")
+		conf.APIKey = config.GetString("api-key")
+		conf.Env = config.GetString("env")
 	}
 
 	hook = airbrake.NewHook(
