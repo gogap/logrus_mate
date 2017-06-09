@@ -1,7 +1,7 @@
 package mail
 
 import (
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/zbindenren/logrus_mail"
 
 	"github.com/gogap/logrus_mate"
