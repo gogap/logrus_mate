@@ -5,7 +5,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/orcaman/concurrent-map"
 )
 

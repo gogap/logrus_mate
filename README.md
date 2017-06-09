@@ -1,6 +1,6 @@
 # Logrus Mate <img src="http://i.imgur.com/hTeVwmJ.png" width="40" height="40" alt=":walrus:" class="emoji" title=":walrus:"/>
 
-**Logrus mate** is a tool for [Logrus](https://github.com/Sirupsen/logrus), it will help you to initial logger by config, including `Formatter`, `Hook`，`Level` and `Output` .
+**Logrus mate** is a tool for [Logrus](https://github.com/sirupsen/logrus), it will help you to initial logger by config, including `Formatter`, `Hook`，`Level` and `Output` .
 
 > If you more prefer old version, you could checkout tag v1.0.0
 
@@ -14,7 +14,7 @@ Hijack `logrus.StandardLogger()`
 package main
 
 import (
-    "github.com/Sirupsen/logrus"
+    "github.com/sirupsen/logrus"
     "github.com/gogap/logrus_mate"
 )
 
@@ -62,7 +62,7 @@ Hi jack logger by mate
 package main
 
 import (
-    "github.com/Sirupsen/logrus"
+    "github.com/sirupsen/logrus"
     "github.com/gogap/logrus_mate"
 )
 
@@ -90,7 +90,7 @@ Fallback the ConfigString
 package main
 
 import (
-    "github.com/Sirupsen/logrus"
+    "github.com/sirupsen/logrus"
     "github.com/gogap/logrus_mate"
 )
 
@@ -123,7 +123,7 @@ Fallback config while hijack
 package main
 
 import (
-    "github.com/Sirupsen/logrus"
+    "github.com/sirupsen/logrus"
     "github.com/gogap/logrus_mate"
 )
 
@@ -154,8 +154,8 @@ you also could set your own config provider
 | Hook  | Options |
 | ----- | ----------- |
 | [Airbrake](https://github.com/gemnasium/logrus-airbrake-hook) | `project-id` `api-key` `env`|
-| [Syslog](https://github.com/Sirupsen/logrus/blob/master/hooks/syslog/syslog.go) | `network` `address` `priority` `tag`|
-| [BugSnag](https://github.com/Sirupsen/logrus/blob/master/hooks/bugsnag/bugsnag.go) | `api-key` |
+| [Syslog](https://github.com/sirupsen/logrus/blob/master/hooks/syslog/syslog.go) | `network` `address` `priority` `tag`|
+| [BugSnag](https://github.com/sirupsen/logrus/blob/master/hooks/bugsnag/bugsnag.go) | `api-key` |
 | [Slackrus](https://github.com/johntdyer/slackrus) | `url` `levels` `channel` `emoji` `username`|
 | [Graylog](https://github.com/gemnasium/logrus-graylog-hook) | `address` `facility` `extra`|
 | [Mail](https://github.com/zbindenren/logrus_mail) | `app-name` `host` `port` `from` `to` `username` `password`|
@@ -342,7 +342,7 @@ type Configuration interface {
 package main
 
 import (
-    "github.com/Sirupsen/logrus"
+    "github.com/sirupsen/logrus"
     "github.com/gogap/logrus_mate"
 )
 

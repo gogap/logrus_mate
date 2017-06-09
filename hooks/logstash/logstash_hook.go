@@ -1,7 +1,7 @@
 package logstash
 
 import (
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/bshuster-repo/logrus-logstash-hook"
 	"github.com/gogap/logrus_mate"
 )
