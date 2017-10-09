@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/gogap/errors"
 	"github.com/gogap/logrus_mate"
 

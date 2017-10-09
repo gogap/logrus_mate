@@ -1,7 +1,7 @@
 package slack
 
 import (
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/johntdyer/slackrus"
 
 	"github.com/gogap/logrus_mate"
