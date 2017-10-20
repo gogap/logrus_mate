@@ -23,14 +23,17 @@ func NewGraylogHook(config logrus_mate.Configuration) (hook logrus.Hook, err err
 		conf.Address = config.GetString("address")
 
 		extraConf := config.GetConfig("extra")
-		keys := extraConf.Keys()
-		extra := make(map[string]interface{}, len(keys))
 
-		for i := 0; i < len(keys); i++ {
-			extra[keys[i]] = extraConf.GetString(keys[i])
+		if extraConf != nil {
+			keys := extraConf.Keys()
+			extra := make(map[string]interface{}, len(keys))
+
+			for i := 0; i < len(keys); i++ {
+				extra[keys[i]] = extraConf.GetString(keys[i])
+			}
+
+			conf.Extra = extra
 		}
-
-		conf.Extra = extra
 	}
 
 	hook = graylog.NewAsyncGraylogHook(
