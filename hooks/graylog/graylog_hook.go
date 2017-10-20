@@ -1,7 +1,7 @@
 package graylog
 
 import (
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"gopkg.in/gemnasium/logrus-graylog-hook.v2"
 
 	"github.com/gogap/logrus_mate"

@@ -3,7 +3,7 @@ package bearychat
 import (
 	"fmt"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/gogap/bearychat"
 	"github.com/gogap/logrus_mate"
 )
