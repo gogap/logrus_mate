@@ -5,6 +5,7 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/gogap/config"
 	"github.com/sirupsen/logrus"
 )
 
@@ -13,11 +14,7 @@ var (
 	newHookFuncs = make(map[string]NewHookFunc)
 )
 
-var (
-	errHookNotRegistered = errors.New("logurs mate: hook not registerd")
-)
-
-type NewHookFunc func(Configuration) (hook logrus.Hook, err error)
+type NewHookFunc func(config.Configuration) (hook logrus.Hook, err error)
 
 func RegisterHook(name string, newHookFunc NewHookFunc) {
 	hooksLocker.Lock()
@@ -49,12 +46,12 @@ func Hooks() []string {
 	return list
 }
 
-func NewHook(name string, config Configuration) (hook logrus.Hook, err error) {
+func NewHook(name string, config config.Configuration) (hook logrus.Hook, err error) {
 	hooksLocker.Lock()
 	defer hooksLocker.Unlock()
 
 	if newHookFunc, exist := newHookFuncs[name]; !exist {
-		err = errHookNotRegistered
+		err = errors.New("logurs mate: hook not registerd: " + name)
 		return
 	} else {
 		hook, err = newHookFunc(config)

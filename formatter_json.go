@@ -1,6 +1,7 @@
 package logrus_mate
 
 import (
+	"github.com/gogap/config"
 	"github.com/sirupsen/logrus"
 )
 
@@ -12,7 +13,7 @@ func init() {
 	RegisterFormatter("json", NewJSONFormatter)
 }
 
-func NewJSONFormatter(config Configuration) (formatter logrus.Formatter, err error) {
+func NewJSONFormatter(config config.Configuration) (formatter logrus.Formatter, err error) {
 	var format string
 	if config != nil {
 		format = config.GetString("timestamp_format")

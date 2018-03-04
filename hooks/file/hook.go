@@ -8,8 +8,9 @@ import (
 	"strings"
 
 	"github.com/sirupsen/logrus"
-	"github.com/gogap/logrus_mate"
 
+	"github.com/gogap/config"
+	"github.com/gogap/logrus_mate"
 	"github.com/gogap/logrus_mate/hooks/utils/caller"
 )
 
@@ -17,7 +18,7 @@ func init() {
 	logrus_mate.RegisterHook("file", NewFileHook)
 }
 
-func NewFileHook(config logrus_mate.Configuration) (hook logrus.Hook, err error) {
+func NewFileHook(config config.Configuration) (hook logrus.Hook, err error) {
 
 	conf := FileLogConifg{}
 

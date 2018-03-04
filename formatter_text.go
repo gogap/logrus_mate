@@ -1,6 +1,7 @@
 package logrus_mate
 
 import (
+	"github.com/gogap/config"
 	"github.com/sirupsen/logrus"
 )
 
@@ -8,7 +9,7 @@ func init() {
 	RegisterFormatter("text", NewTextFormatter)
 }
 
-func NewTextFormatter(config Configuration) (formatter logrus.Formatter, err error) {
+func NewTextFormatter(config config.Configuration) (formatter logrus.Formatter, err error) {
 
 	f := &logrus.TextFormatter{}
 

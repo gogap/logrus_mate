@@ -5,6 +5,7 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/gogap/config"
 	"github.com/sirupsen/logrus"
 )
 
@@ -17,7 +18,7 @@ var (
 	errFormatterNotRegistered = errors.New("formatter not registerd")
 )
 
-type NewFormatterFunc func(Configuration) (formatter logrus.Formatter, err error)
+type NewFormatterFunc func(config.Configuration) (formatter logrus.Formatter, err error)
 
 func RegisterFormatter(name string, newFormatterFunc NewFormatterFunc) {
 	formattersLocker.Lock()
@@ -49,7 +50,7 @@ func Formatters() []string {
 	return list
 }
 
-func NewFormatter(name string, config Configuration) (formatter logrus.Formatter, err error) {
+func NewFormatter(name string, config config.Configuration) (formatter logrus.Formatter, err error) {
 	formattersLocker.Lock()
 	defer formattersLocker.Unlock()
 

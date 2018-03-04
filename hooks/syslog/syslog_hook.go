@@ -6,6 +6,7 @@ import (
 	"github.com/sirupsen/logrus"
 	logrus_syslog "github.com/sirupsen/logrus/hooks/syslog"
 
+	"github.com/gogap/config"
 	"github.com/gogap/logrus_mate"
 )
 
@@ -20,7 +21,7 @@ func init() {
 	logrus_mate.RegisterHook("syslog", NewSyslogHook)
 }
 
-func NewSyslogHook(config logrus_mate.Configuration) (hook logrus.Hook, err error) {
+func NewSyslogHook(config config.Configuration) (hook logrus.Hook, err error) {
 	conf := SyslogHookConfig{}
 
 	if config != nil {

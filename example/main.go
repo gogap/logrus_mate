@@ -3,12 +3,13 @@ package main
 import (
 	"fmt"
 
-	"github.com/sirupsen/logrus"
 	"github.com/gogap/errors"
 	"github.com/gogap/logrus_mate"
+	"github.com/sirupsen/logrus"
 
 	_ "github.com/gogap/logrus_mate/hooks/bearychat"
 	_ "github.com/gogap/logrus_mate/hooks/expander"
+	_ "github.com/gogap/logrus_mate/hooks/file"
 )
 
 func main() {

@@ -4,6 +4,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"gopkg.in/gemnasium/logrus-airbrake-hook.v2"
 
+	"github.com/gogap/config"
 	"github.com/gogap/logrus_mate"
 )
 
@@ -17,7 +18,7 @@ func init() {
 	logrus_mate.RegisterHook("airbrake", NewAirbrakeHook)
 }
 
-func NewAirbrakeHook(config logrus_mate.Configuration) (hook logrus.Hook, err error) {
+func NewAirbrakeHook(config config.Configuration) (hook logrus.Hook, err error) {
 
 	conf := AirbrakeHookConfig{}
 	if config != nil {

@@ -1,8 +1,9 @@
 package slack
 
 import (
-	"github.com/sirupsen/logrus"
+	"github.com/gogap/config"
 	"github.com/johntdyer/slackrus"
+	"github.com/sirupsen/logrus"
 
 	"github.com/gogap/logrus_mate"
 )
@@ -19,7 +20,7 @@ func init() {
 	logrus_mate.RegisterHook("slack", NewSlackHook)
 }
 
-func NewSlackHook(config logrus_mate.Configuration) (hook logrus.Hook, err error) {
+func NewSlackHook(config config.Configuration) (hook logrus.Hook, err error) {
 	conf := SlackHookConfig{}
 
 	if config != nil {

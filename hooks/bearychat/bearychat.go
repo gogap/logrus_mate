@@ -2,10 +2,11 @@ package bearychat
 
 import (
 	"fmt"
+	"github.com/gogap/config"
 
-	"github.com/sirupsen/logrus"
 	"github.com/gogap/bearychat"
 	"github.com/gogap/logrus_mate"
+	"github.com/sirupsen/logrus"
 )
 
 var allLevels = []logrus.Level{
@@ -30,7 +31,7 @@ func init() {
 	logrus_mate.RegisterHook("bearychat", NewBearyChatHook)
 }
 
-func NewBearyChatHook(config logrus_mate.Configuration) (hook logrus.Hook, err error) {
+func NewBearyChatHook(config config.Configuration) (hook logrus.Hook, err error) {
 	conf := BearyChatHookConfig{}
 
 	if config != nil {

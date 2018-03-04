@@ -1,6 +1,7 @@
 package graylog
 
 import (
+	"github.com/gogap/config"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/gemnasium/logrus-graylog-hook.v2"
 
@@ -16,7 +17,7 @@ func init() {
 	logrus_mate.RegisterHook("graylog", NewGraylogHook)
 }
 
-func NewGraylogHook(config logrus_mate.Configuration) (hook logrus.Hook, err error) {
+func NewGraylogHook(config config.Configuration) (hook logrus.Hook, err error) {
 	conf := GraylogHookConfig{}
 
 	if config != nil {

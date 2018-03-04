@@ -5,6 +5,8 @@ import (
 	"io"
 	"sort"
 	"sync"
+
+	"github.com/gogap/config"
 )
 
 var (
@@ -16,7 +18,7 @@ var (
 	errWriterNotRegistered = errors.New("writer not registerd")
 )
 
-type NewWriterFunc func(Configuration) (writer io.Writer, err error)
+type NewWriterFunc func(config.Configuration) (writer io.Writer, err error)
 
 func RegisterWriter(name string, newWriterFunc NewWriterFunc) {
 	writersLocker.Lock()
@@ -48,7 +50,7 @@ func Writers() []string {
 	return list
 }
 
-func NewWriter(name string, config Configuration) (writer io.Writer, err error) {
+func NewWriter(name string, conf config.Configuration) (writer io.Writer, err error) {
 	writersLocker.Lock()
 	defer writersLocker.Unlock()
 
@@ -56,7 +58,7 @@ func NewWriter(name string, config Configuration) (writer io.Writer, err error) 
 		err = errWriterNotRegistered
 		return
 	} else {
-		writer, err = newWriterFunc(config)
+		writer, err = newWriterFunc(conf)
 	}
 
 	return

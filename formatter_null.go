@@ -1,6 +1,7 @@
 package logrus_mate
 
 import (
+	"github.com/gogap/config"
 	"github.com/sirupsen/logrus"
 )
 
@@ -11,7 +12,7 @@ func init() {
 	RegisterFormatter("null", NewNullFormatter)
 }
 
-func NewNullFormatter(config Configuration) (formatter logrus.Formatter, err error) {
+func NewNullFormatter(config config.Configuration) (formatter logrus.Formatter, err error) {
 	formatter = &NullFormatter{}
 	return
 }

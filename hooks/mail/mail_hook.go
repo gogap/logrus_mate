@@ -1,6 +1,7 @@
 package mail
 
 import (
+	"github.com/gogap/config"
 	"github.com/sirupsen/logrus"
 	"github.com/zbindenren/logrus_mail"
 
@@ -21,7 +22,7 @@ func init() {
 	logrus_mate.RegisterHook("mail", NewMailHook)
 }
 
-func NewMailHook(config logrus_mate.Configuration) (hook logrus.Hook, err error) {
+func NewMailHook(config config.Configuration) (hook logrus.Hook, err error) {
 	conf := MailHookConfig{}
 	if config != nil {
 		conf.AppName = config.GetString("app-name")

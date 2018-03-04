@@ -1,10 +1,11 @@
 package expander
 
 import (
+	"github.com/gogap/config"
 	"github.com/gogap/errors"
 
-	"github.com/sirupsen/logrus"
 	"github.com/gogap/logrus_mate"
+	"github.com/sirupsen/logrus"
 )
 
 type ExpanderHook struct {
@@ -14,7 +15,7 @@ func init() {
 	logrus_mate.RegisterHook("expander", NewExpanderHook)
 }
 
-func NewExpanderHook(config logrus_mate.Configuration) (hook logrus.Hook, err error) {
+func NewExpanderHook(conf config.Configuration) (hook logrus.Hook, err error) {
 	hook = &ExpanderHook{}
 	return
 }

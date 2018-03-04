@@ -2,6 +2,8 @@ package logrus_mate
 
 import (
 	"io"
+
+	"github.com/gogap/config"
 )
 
 func init() {
@@ -15,7 +17,7 @@ func (w *NullWriter) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-func NewNullWriter(conf Configuration) (writer io.Writer, err error) {
+func NewNullWriter(conf config.Configuration) (writer io.Writer, err error) {
 	writer = new(NullWriter)
 	return
 }
