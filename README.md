@@ -159,7 +159,6 @@ you also could set your own config provider
 | [Slackrus](https://github.com/johntdyer/slackrus) | `url` `levels` `channel` `emoji` `username`|
 | [Graylog](https://github.com/gemnasium/logrus-graylog-hook) | `address` `facility` `extra`|
 | [Mail](https://github.com/zbindenren/logrus_mail) | `app-name` `host` `port` `from` `to` `username` `password`|
-| [Logstash](https://github.com/bshuster-repo/logrus-logstash-hook) | `app-name` `protocol` `address` `always-sent-fields` `prefix`|
 | File | `filename` `max-lines` `max-size` `daily` `max-days` `rotate` `level`|
 | BearyChat | `url` `levels` `channel` `user` `markdown` `async`|
 
@@ -342,8 +341,9 @@ type Configuration interface {
 package main
 
 import (
-    "github.com/sirupsen/logrus"
+    "github.com/gogap/config"
     "github.com/gogap/logrus_mate"
+    "github.com/sirupsen/logrus"
 )
 
 func main() {
@@ -355,7 +355,7 @@ func main() {
             "mate.conf", // { mike {formatter.name = "text"} }
         ),
         logrus_mate.ConfigProvider(
-            &logrus_mate.HOCONConfigProvider{}, // this is defualt provider if you did not configurate
+            &config.HOCONConfigProvider{}, // this is defualt provider if you did not configurate
         ),
     )
 
@@ -363,7 +363,8 @@ func main() {
         logrus.StandardLogger(),
         "mike",
     )
-    
+
     logrus.Println("hello std logger is hijack by mike")
 }
+
 ```
