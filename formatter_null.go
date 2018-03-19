@@ -9,7 +9,7 @@ type NullFormatter struct {
 }
 
 func init() {
-	RegisterFormatter("null", NewNullFormatter)
+	RegisterFormatter("nil", NewNullFormatter)
 }
 
 func NewNullFormatter(config config.Configuration) (formatter logrus.Formatter, err error) {

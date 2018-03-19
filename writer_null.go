@@ -7,7 +7,7 @@ import (
 )
 
 func init() {
-	RegisterWriter("null", NewNullWriter)
+	RegisterWriter("nil", NewNullWriter)
 }
 
 type NullWriter struct {
