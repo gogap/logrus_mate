@@ -22,7 +22,7 @@ type NewFormatterFunc func(config.Configuration) (formatter logrus.Formatter, er
 
 func RegisterFormatter(name string, newFormatterFunc NewFormatterFunc) {
 	formattersLocker.Lock()
-	formattersLocker.Unlock()
+	defer formattersLocker.Unlock()
 
 	if name == "" {
 		panic("logurs mate: Register formatter name is empty")
