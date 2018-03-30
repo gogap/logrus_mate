@@ -7,9 +7,6 @@ import (
 type Option func(*Config)
 
 type Config struct {
-	ConfigFile   string
-	ConfigString string
-
 	configOpts []config.Option
 }
 
@@ -22,6 +19,12 @@ func ConfigFile(fn string) Option {
 func ConfigString(str string) Option {
 	return func(o *Config) {
 		o.configOpts = append(o.configOpts, config.ConfigString(str))
+	}
+}
+
+func WithConfig(conf config.Configuration) Option {
+	return func(o *Config) {
+		o.configOpts = append(o.configOpts, config.WithConfig(conf))
 	}
 }
 
