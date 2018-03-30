@@ -22,7 +22,7 @@ type NewWriterFunc func(config.Configuration) (writer io.Writer, err error)
 
 func RegisterWriter(name string, newWriterFunc NewWriterFunc) {
 	writersLocker.Lock()
-	writersLocker.Unlock()
+	defer writersLocker.Unlock()
 
 	if name == "" {
 		panic("logurs mate: Register writer name is empty")
