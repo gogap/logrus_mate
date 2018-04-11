@@ -89,7 +89,11 @@ func hijackByConfig(logger *logrus.Logger, conf config.Configuration) (err error
 		}
 	}
 
-	level := conf.GetString("level", "debug")
+	level := conf.GetString("level")
+
+	if len(level) == 0 {
+		level = "info"
+	}
 
 	var lvl = logrus.DebugLevel
 	if lvl, err = logrus.ParseLevel(level); err != nil {
