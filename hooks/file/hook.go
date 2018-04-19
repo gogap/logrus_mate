@@ -2,10 +2,12 @@ package logrus_file
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"os"
-	"os/exec"
+	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/sirupsen/logrus"
 
@@ -14,36 +16,57 @@ import (
 	"github.com/gogap/logrus_mate/hooks/utils/caller"
 )
 
+type fileHookConfig struct {
+	Filename   string `json:"filename"`
+	MaxLines   int64  `json:"maxLines"`
+	MaxSize    int64  `json:"maxsize"`
+	Daily      bool   `json:"daily"`
+	MaxDays    int64  `json:"maxDays"`
+	Rotate     bool   `json:"rotate"`
+	Perm       string `json:"perm"`
+	RotatePerm string `json:"rotateperm"`
+	Level      int32  `json:"level"`
+}
+
 func init() {
 	logrus_mate.RegisterHook("file", NewFileHook)
 }
 
 func NewFileHook(config config.Configuration) (hook logrus.Hook, err error) {
 
-	conf := FileLogConifg{}
+	filename := config.GetString("filename", "logs/logrus.log")
 
-	if config != nil {
-		conf.Filename = config.GetString("filename")
-		conf.Maxlines = int(config.GetInt64("max-lines"))
-		conf.Maxsize = int(config.GetInt64("max-size"))
-		conf.Daily = config.GetBoolean("daily")
-		conf.Maxdays = config.GetInt64("max-days")
-		conf.Rotate = config.GetBoolean("rotate")
-		conf.Level = int(config.GetInt32("level"))
-	}
+	dir := filepath.Dir(filename)
 
-	path := strings.Split(conf.Filename, "/")
-	if len(path) > 1 {
-		exec.Command("mkdir", path[0]).Run()
-	}
-
-	w := NewFileWriter()
-
-	if err = w.Init(conf); err != nil {
+	err = os.MkdirAll(dir, 0755)
+	if err != nil {
 		return
 	}
 
-	w.SetPrefix("[-] ")
+	hookConf := fileHookConfig{
+		Filename:   filename,
+		Daily:      config.GetBoolean("daily", true),
+		MaxDays:    config.GetInt64("max-days", 7),
+		Rotate:     config.GetBoolean("rotate", true),
+		MaxLines:   config.GetInt64("max-lines", 10000),
+		MaxSize:    config.GetInt64("max-size", 1024),
+		RotatePerm: config.GetString("rotate-perm", "0440"),
+		Perm:       config.GetString("perm", "0660"),
+		Level:      config.GetInt32("level"),
+	}
+
+	w := newFileWriter()
+
+	confData, err := json.Marshal(hookConf)
+
+	if err != nil {
+		return
+	}
+
+	err = w.Init(string(confData))
+	if err != nil {
+		return
+	}
 
 	hook = &FileHook{W: w}
 
@@ -51,7 +74,7 @@ func NewFileHook(config config.Configuration) (hook logrus.Hook, err error) {
 }
 
 type FileHook struct {
-	W *FileLogWriter
+	W *fileLogWriter
 }
 
 func (p *FileHook) Fire(entry *logrus.Entry) (err error) {
@@ -61,19 +84,22 @@ func (p *FileHook) Fire(entry *logrus.Entry) (err error) {
 		fmt.Fprintf(os.Stderr, "Unable to read entry, %v", err)
 		return err
 	}
+
+	now := time.Now()
+
 	switch entry.Level {
 	case logrus.PanicLevel:
 		fallthrough
 	case logrus.FatalLevel:
 		fallthrough
 	case logrus.ErrorLevel:
-		return p.W.WriteMsg(fmt.Sprintf("[ERROR] %s", message), LevelError)
+		return p.W.WriteMsg(now, fmt.Sprintf("[ERROR] %s", message), LevelError)
 	case logrus.WarnLevel:
-		return p.W.WriteMsg(fmt.Sprintf("[WARN] %s", message), LevelWarn)
+		return p.W.WriteMsg(now, fmt.Sprintf("[WARN] %s", message), LevelWarn)
 	case logrus.InfoLevel:
-		return p.W.WriteMsg(fmt.Sprintf("[INFO] %s", message), LevelInfo)
+		return p.W.WriteMsg(now, fmt.Sprintf("[INFO] %s", message), LevelInfo)
 	case logrus.DebugLevel:
-		return p.W.WriteMsg(fmt.Sprintf("[DEBUG] %s", message), LevelDebug)
+		return p.W.WriteMsg(now, fmt.Sprintf("[DEBUG] %s", message), LevelDebug)
 	default:
 		return nil
 	}

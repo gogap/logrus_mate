@@ -1,12 +1,14 @@
 package logrus_file
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
-	"log"
+	"io"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -20,201 +22,307 @@ const (
 	LevelDebug
 )
 
-type FileLogConifg struct {
-	Filename string
-	Maxlines int
-	Maxsize  int
-	Daily    bool
-	Maxdays  int64
-	Rotate   bool
-	Level    int
-}
+const (
+	y1  = `0123456789`
+	y2  = `0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789`
+	y3  = `0000000000111111111122222222223333333333444444444455555555556666666666777777777788888888889999999999`
+	y4  = `0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789`
+	mo1 = `000000000111`
+	mo2 = `123456789012`
+	d1  = `0000000001111111111222222222233`
+	d2  = `1234567890123456789012345678901`
+	h1  = `000000000011111111112222`
+	h2  = `012345678901234567890123`
+	mi1 = `000000000011111111112222222222333333333344444444445555555555`
+	mi2 = `012345678901234567890123456789012345678901234567890123456789`
+	s1  = `000000000011111111112222222222333333333344444444445555555555`
+	s2  = `012345678901234567890123456789012345678901234567890123456789`
+	ns1 = `0123456789`
+)
 
-// FileLogWriter implements LoggerInterface.
+// fileLogWriter implements LoggerInterface.
 // It writes messages by lines limit, file size limit, or time frequency.
-type FileLogWriter struct {
-	*log.Logger
-	FileLogConifg
+type fileLogWriter struct {
+	sync.RWMutex // write log order by order and  atomic incr maxLinesCurLines and maxSizeCurSize
+	// The opened file
+	Filename   string `json:"filename"`
+	fileWriter *os.File
 
-	mw                *MuxWriter
-	maxlines_curlines int
-	maxsize_cursize   int
-	daily_opendate    int
-	startLock         sync.Mutex // Only one log can write to the file
+	// Rotate at line
+	MaxLines         int `json:"maxlines"`
+	maxLinesCurLines int
+
+	// Rotate at size
+	MaxSize        int `json:"maxsize"`
+	maxSizeCurSize int
+
+	// Rotate daily
+	Daily         bool  `json:"daily"`
+	MaxDays       int64 `json:"maxdays"`
+	dailyOpenDate int
+	dailyOpenTime time.Time
+
+	Rotate bool `json:"rotate"`
+
+	Level int `json:"level"`
+
+	Perm string `json:"perm"`
+
+	RotatePerm string `json:"rotateperm"`
+
+	fileNameOnly, suffix string // like "project.log", project is fileNameOnly and .log is suffix
 }
 
-// an *os.File writer with locker.
-type MuxWriter struct {
-	sync.Mutex
-	fd *os.File
-}
-
-// write to os.File.
-func (l *MuxWriter) Write(b []byte) (int, error) {
-	l.Lock()
-	defer l.Unlock()
-	return l.fd.Write(b)
-}
-
-// set os.File in writer.
-func (l *MuxWriter) SetFd(fd *os.File) {
-	if l.fd != nil {
-		l.fd.Close()
+// newFileWriter create a FileLogWriter returning as LoggerInterface.
+func newFileWriter() *fileLogWriter {
+	w := &fileLogWriter{
+		Daily:      true,
+		MaxDays:    7,
+		Rotate:     true,
+		RotatePerm: "0440",
+		Level:      LevelDebug,
+		Perm:       "0660",
 	}
-	l.fd = fd
-}
-
-// create a FileLogWriter returning as LoggerInterface.
-func NewFileWriter() *FileLogWriter {
-	w := &FileLogWriter{
-		FileLogConifg: FileLogConifg{Filename: "",
-			Maxlines: 1000000,
-			Maxsize:  1 << 28, //256 MB
-			Daily:    true,
-			Maxdays:  7,
-			Rotate:   true,
-			Level:    LevelDebug},
-	}
-	// use MuxWriter instead direct use os.File for lock write when rotate
-	w.mw = new(MuxWriter)
-	// set MuxWriter as Logger's io.Writer
-	w.Logger = log.New(w.mw, "", log.Ldate|log.Ltime)
 	return w
 }
 
-// Init file logger.
-func (w *FileLogWriter) Init(conf FileLogConifg) (err error) {
-
-	w.FileLogConifg = conf
-
+// Init file logger with json config.
+// jsonConfig like:
+//	{
+//	"filename":"logs/beego.log",
+//	"maxLines":10000,
+//	"maxsize":1024,
+//	"daily":true,
+//	"maxDays":15,
+//	"rotate":true,
+//  	"perm":"0600"
+//	}
+func (w *fileLogWriter) Init(jsonConfig string) error {
+	err := json.Unmarshal([]byte(jsonConfig), w)
+	if err != nil {
+		return err
+	}
 	if len(w.Filename) == 0 {
 		return errors.New("jsonconfig must have filename")
 	}
-
+	w.suffix = filepath.Ext(w.Filename)
+	w.fileNameOnly = strings.TrimSuffix(w.Filename, w.suffix)
+	if w.suffix == "" {
+		w.suffix = ".log"
+	}
 	err = w.startLogger()
 	return err
 }
 
 // start file logger. create log file and set to locker-inside file writer.
-func (w *FileLogWriter) startLogger() error {
-	fd, err := w.createLogFile()
+func (w *fileLogWriter) startLogger() error {
+	file, err := w.createLogFile()
 	if err != nil {
 		return err
 	}
-	w.mw.SetFd(fd)
-	err = w.initFd()
-	if err != nil {
-		return err
+	if w.fileWriter != nil {
+		w.fileWriter.Close()
 	}
-	return nil
+	w.fileWriter = file
+	return w.initFd()
 }
 
-func (w *FileLogWriter) docheck(size int) {
-	w.startLock.Lock()
-	defer w.startLock.Unlock()
-	if w.Rotate && ((w.Maxlines > 0 && w.maxlines_curlines >= w.Maxlines) ||
-		(w.Maxsize > 0 && w.maxsize_cursize >= w.Maxsize) ||
-		(w.Daily && time.Now().Day() != w.daily_opendate)) {
-		if err := w.DoRotate(); err != nil {
-			fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", w.Filename, err)
-			return
-		}
-	}
-	w.maxlines_curlines++
-	w.maxsize_cursize += size
+func (w *fileLogWriter) needRotate(size int, day int) bool {
+	return (w.MaxLines > 0 && w.maxLinesCurLines >= w.MaxLines) ||
+		(w.MaxSize > 0 && w.maxSizeCurSize >= w.MaxSize) ||
+		(w.Daily && day != w.dailyOpenDate)
+
 }
 
-// write logger message into file.
-func (w *FileLogWriter) WriteMsg(msg string, level int) error {
+// WriteMsg write logger message into file.
+func (w *fileLogWriter) WriteMsg(when time.Time, msg string, level int) error {
 	if level > w.Level {
 		return nil
 	}
-	n := 24 + len(msg) // 24 stand for the length "2013/06/23 21:00:22 [T] "
-	w.docheck(n)
-	w.Logger.Print(msg)
-	return nil
+	h, d := formatTimeHeader(when)
+	msg = string(h) + msg + "\n"
+	if w.Rotate {
+		w.RLock()
+		if w.needRotate(len(msg), d) {
+			w.RUnlock()
+			w.Lock()
+			if w.needRotate(len(msg), d) {
+				if err := w.doRotate(when); err != nil {
+					fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", w.Filename, err)
+				}
+			}
+			w.Unlock()
+		} else {
+			w.RUnlock()
+		}
+	}
+
+	w.Lock()
+	_, err := w.fileWriter.Write([]byte(msg))
+	if err == nil {
+		w.maxLinesCurLines++
+		w.maxSizeCurSize += len(msg)
+	}
+	w.Unlock()
+	return err
 }
 
-func (w *FileLogWriter) createLogFile() (*os.File, error) {
+func (w *fileLogWriter) createLogFile() (*os.File, error) {
 	// Open the log file
-	fd, err := os.OpenFile(w.Filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0660)
+	perm, err := strconv.ParseInt(w.Perm, 8, 64)
+	if err != nil {
+		return nil, err
+	}
+	fd, err := os.OpenFile(w.Filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(perm))
+	if err == nil {
+		// Make sure file perm is user set perm cause of `os.OpenFile` will obey umask
+		os.Chmod(w.Filename, os.FileMode(perm))
+	}
 	return fd, err
 }
 
-func (w *FileLogWriter) initFd() error {
-	fd := w.mw.fd
-	finfo, err := fd.Stat()
+func (w *fileLogWriter) initFd() error {
+	fd := w.fileWriter
+	fInfo, err := fd.Stat()
 	if err != nil {
-		return fmt.Errorf("get stat err: %s\n", err)
+		return fmt.Errorf("get stat err: %s", err)
 	}
-	w.maxsize_cursize = int(finfo.Size())
-	w.daily_opendate = time.Now().Day()
-	if finfo.Size() > 0 {
-		content, err := ioutil.ReadFile(w.Filename)
+	w.maxSizeCurSize = int(fInfo.Size())
+	w.dailyOpenTime = time.Now()
+	w.dailyOpenDate = w.dailyOpenTime.Day()
+	w.maxLinesCurLines = 0
+	if w.Daily {
+		go w.dailyRotate(w.dailyOpenTime)
+	}
+	if fInfo.Size() > 0 && w.MaxLines > 0 {
+		count, err := w.lines()
 		if err != nil {
 			return err
 		}
-		w.maxlines_curlines = len(strings.Split(string(content), "\n"))
-	} else {
-		w.maxlines_curlines = 0
+		w.maxLinesCurLines = count
 	}
 	return nil
+}
+
+func (w *fileLogWriter) dailyRotate(openTime time.Time) {
+	y, m, d := openTime.Add(24 * time.Hour).Date()
+	nextDay := time.Date(y, m, d, 0, 0, 0, 0, openTime.Location())
+	tm := time.NewTimer(time.Duration(nextDay.UnixNano() - openTime.UnixNano() + 100))
+	<-tm.C
+	w.Lock()
+	if w.needRotate(0, time.Now().Day()) {
+		if err := w.doRotate(time.Now()); err != nil {
+			fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", w.Filename, err)
+		}
+	}
+	w.Unlock()
+}
+
+func (w *fileLogWriter) lines() (int, error) {
+	fd, err := os.Open(w.Filename)
+	if err != nil {
+		return 0, err
+	}
+	defer fd.Close()
+
+	buf := make([]byte, 32768) // 32k
+	count := 0
+	lineSep := []byte{'\n'}
+
+	for {
+		c, err := fd.Read(buf)
+		if err != nil && err != io.EOF {
+			return count, err
+		}
+
+		count += bytes.Count(buf[:c], lineSep)
+
+		if err == io.EOF {
+			break
+		}
+	}
+
+	return count, nil
 }
 
 // DoRotate means it need to write file in new file.
-// new file name like xx.log.2013-01-01.2
-func (w *FileLogWriter) DoRotate() error {
-	_, err := os.Lstat(w.Filename)
-	if err == nil { // file exists
-		// Find the next available number
-		num := 1
-		fname := ""
-		for ; err == nil && num <= 999; num++ {
-			fname = w.Filename + fmt.Sprintf(".%s.%03d", time.Now().Format("2006-01-02"), num)
-			_, err = os.Lstat(fname)
-		}
-		// return error if the last file checked still existed
-		if err == nil {
-			return fmt.Errorf("Rotate: Cannot find free log number to rename %s\n", w.Filename)
-		}
-
-		// block Logger's io.Writer
-		w.mw.Lock()
-		defer w.mw.Unlock()
-
-		fd := w.mw.fd
-		fd.Close()
-
-		// close fd before rename
-		// Rename the file to its newfound home
-		err = os.Rename(w.Filename, fname)
-		if err != nil {
-			return fmt.Errorf("Rotate: %s\n", err)
-		}
-
-		// re-start logger
-		err = w.startLogger()
-		if err != nil {
-			return fmt.Errorf("Rotate StartLogger: %s\n", err)
-		}
-
-		go w.deleteOldLog()
+// new file name like xx.2013-01-01.log (daily) or xx.001.log (by line or size)
+func (w *fileLogWriter) doRotate(logTime time.Time) error {
+	// file exists
+	// Find the next available number
+	num := 1
+	fName := ""
+	rotatePerm, err := strconv.ParseInt(w.RotatePerm, 8, 64)
+	if err != nil {
+		return err
 	}
 
+	_, err = os.Lstat(w.Filename)
+	if err != nil {
+		//even if the file is not exist or other ,we should RESTART the logger
+		goto RESTART_LOGGER
+	}
+
+	if w.MaxLines > 0 || w.MaxSize > 0 {
+		for ; err == nil && num <= 999; num++ {
+			fName = w.fileNameOnly + fmt.Sprintf(".%s.%03d%s", logTime.Format("2006-01-02"), num, w.suffix)
+			_, err = os.Lstat(fName)
+		}
+	} else {
+		fName = fmt.Sprintf("%s.%s%s", w.fileNameOnly, w.dailyOpenTime.Format("2006-01-02"), w.suffix)
+		_, err = os.Lstat(fName)
+		for ; err == nil && num <= 999; num++ {
+			fName = w.fileNameOnly + fmt.Sprintf(".%s.%03d%s", w.dailyOpenTime.Format("2006-01-02"), num, w.suffix)
+			_, err = os.Lstat(fName)
+		}
+	}
+	// return error if the last file checked still existed
+	if err == nil {
+		return fmt.Errorf("Rotate: Cannot find free log number to rename %s", w.Filename)
+	}
+
+	// close fileWriter before rename
+	w.fileWriter.Close()
+
+	// Rename the file to its new found name
+	// even if occurs error,we MUST guarantee to  restart new logger
+	err = os.Rename(w.Filename, fName)
+	if err != nil {
+		goto RESTART_LOGGER
+	}
+
+	err = os.Chmod(fName, os.FileMode(rotatePerm))
+
+RESTART_LOGGER:
+
+	startLoggerErr := w.startLogger()
+	go w.deleteOldLog()
+
+	if startLoggerErr != nil {
+		return fmt.Errorf("Rotate StartLogger: %s", startLoggerErr)
+	}
+	if err != nil {
+		return fmt.Errorf("Rotate: %s", err)
+	}
 	return nil
 }
 
-func (w *FileLogWriter) deleteOldLog() {
+func (w *fileLogWriter) deleteOldLog() {
 	dir := filepath.Dir(w.Filename)
 	filepath.Walk(dir, func(path string, info os.FileInfo, err error) (returnErr error) {
 		defer func() {
 			if r := recover(); r != nil {
-				returnErr = fmt.Errorf("Unable to delete old log '%s', error: %+v", path, r)
+				fmt.Fprintf(os.Stderr, "Unable to delete old log '%s', error: %v\n", path, r)
 			}
 		}()
 
-		if !info.IsDir() && info.ModTime().Unix() < (time.Now().Unix()-60*60*24*w.Maxdays) {
-			if strings.HasPrefix(filepath.Base(path), filepath.Base(w.Filename)) {
+		if info == nil {
+			return
+		}
+
+		if !info.IsDir() && info.ModTime().Add(24*time.Hour*time.Duration(w.MaxDays)).Before(time.Now()) {
+			if strings.HasPrefix(filepath.Base(path), filepath.Base(w.fileNameOnly)) &&
+				strings.HasSuffix(filepath.Base(path), w.suffix) {
 				os.Remove(path)
 			}
 		}
@@ -222,14 +330,50 @@ func (w *FileLogWriter) deleteOldLog() {
 	})
 }
 
-// destroy file logger, close file writer.
-func (w *FileLogWriter) Destroy() {
-	w.mw.fd.Close()
+// Destroy close the file description, close file writer.
+func (w *fileLogWriter) Destroy() {
+	w.fileWriter.Close()
 }
 
-// flush file logger.
+// Flush flush file logger.
 // there are no buffering messages in file logger in memory.
 // flush file means sync file from disk.
-func (w *FileLogWriter) Flush() {
-	w.mw.fd.Sync()
+func (w *fileLogWriter) Flush() {
+	w.fileWriter.Sync()
+}
+
+func formatTimeHeader(when time.Time) ([]byte, int) {
+	y, mo, d := when.Date()
+	h, mi, s := when.Clock()
+	ns := when.Nanosecond() / 1000000
+	//len("2006/01/02 15:04:05.123 ")==24
+	var buf [24]byte
+
+	buf[0] = y1[y/1000%10]
+	buf[1] = y2[y/100]
+	buf[2] = y3[y-y/100*100]
+	buf[3] = y4[y-y/100*100]
+	buf[4] = '/'
+	buf[5] = mo1[mo-1]
+	buf[6] = mo2[mo-1]
+	buf[7] = '/'
+	buf[8] = d1[d-1]
+	buf[9] = d2[d-1]
+	buf[10] = ' '
+	buf[11] = h1[h]
+	buf[12] = h2[h]
+	buf[13] = ':'
+	buf[14] = mi1[mi]
+	buf[15] = mi2[mi]
+	buf[16] = ':'
+	buf[17] = s1[s]
+	buf[18] = s2[s]
+	buf[19] = '.'
+	buf[20] = ns1[ns/100]
+	buf[21] = ns1[ns%100/10]
+	buf[22] = ns1[ns%10]
+
+	buf[23] = ' '
+
+	return buf[0:], d
 }
