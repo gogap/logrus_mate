@@ -161,6 +161,7 @@ you also could set your own config provider
 | [Mail](https://github.com/zbindenren/logrus_mail) | `app-name` `host` `port` `from` `to` `username` `password`|
 | File | `filename` `max-lines` `max-size` `daily` `max-days` `rotate` `level`|
 | BearyChat | `url` `levels` `channel` `user` `markdown` `async`|
+| [LFSHook](https://github.com/rifflock/lfshook) | `path-map { error = "logs/error.log" ... }`|
 
 When we need use above hooks, we need import these package as follow:
 
