@@ -6,7 +6,7 @@ import (
 
 	"github.com/adjust/redis"
 	"github.com/adjust/redisio"
-
+	"github.com/gogap/config"
 	"github.com/gogap/logrus_mate"
 )
 
@@ -22,7 +22,7 @@ func init() {
 	logrus_mate.RegisterWriter("redisio", NewRedisIOWriter)
 }
 
-func NewRedisIOWriter(config logrus_mate.Configuration) (writer io.Writer, err error) {
+func NewRedisIOWriter(config config.Configuration) (writer io.Writer, err error) {
 	conf := RedisIOConfig{}
 
 	if config != nil {
