@@ -264,6 +264,7 @@ func NewMyFormatter(config logrus_mate.Configuration) (formatter logrus.Formatte
 | Writer  | Description |
 | ----- | ----------- |
 |redisio| just for demo, it will output into redis, the key type is list|
+|[rotatelogs](https://github.com/lestrrat-go/file-rotatelogs)| write log to file , configs: `clock` `location` `link-name` `rotation-time` `max-age`|
 
 When we need use 3rd writer, we need import these package as follow:
 
