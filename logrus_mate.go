@@ -2,11 +2,12 @@ package logrus_mate
 
 import (
 	"errors"
-	"github.com/gogap/config"
 	"io"
 	"strings"
+	"sync"
 
-	"github.com/orcaman/concurrent-map"
+	"github.com/gogap/config"
+
 	"github.com/sirupsen/logrus"
 )
 
@@ -15,8 +16,8 @@ var (
 )
 
 type LogrusMate struct {
-	loggersConf cmap.ConcurrentMap //map[string]*Config
-	loggers     cmap.ConcurrentMap //map[string]*logrus.Logger
+	loggersConf sync.Map //map[string]*Config
+	loggers     sync.Map //map[string]*logrus.Logger
 }
 
 func NewLogger(opts ...Option) (logger *logrus.Logger, err error) {
@@ -116,8 +117,8 @@ func hijackByConfig(logger *logrus.Logger, conf config.Configuration) (err error
 
 func NewLogrusMate(opts ...Option) (logrusMate *LogrusMate, err error) {
 	mate := &LogrusMate{
-		loggersConf: cmap.New(),
-		loggers:     cmap.New(),
+		loggersConf: sync.Map{},
+		loggers:     sync.Map{},
 	}
 
 	logrusMateConf := Config{}
@@ -135,7 +136,7 @@ func NewLogrusMate(opts ...Option) (logrusMate *LogrusMate, err error) {
 	loggerNames := conf.Keys()
 
 	for i := 0; i < len(loggerNames); i++ {
-		mate.loggersConf.SetIfAbsent(loggerNames[i], conf.GetConfig(loggerNames[i]))
+		mate.loggersConf.LoadOrStore(loggerNames[i], conf.GetConfig(loggerNames[i]))
 	}
 
 	logrusMate = mate
@@ -144,7 +145,7 @@ func NewLogrusMate(opts ...Option) (logrusMate *LogrusMate, err error) {
 }
 
 func (p *LogrusMate) Hijack(logger *logrus.Logger, loggerName string, opts ...Option) (err error) {
-	confV, exist := p.loggersConf.Get(loggerName)
+	confV, exist := p.loggersConf.Load(loggerName)
 	if !exist {
 		err = ErrLoggerNotExist
 		return
@@ -184,13 +185,13 @@ func (p *LogrusMate) Logger(loggerName ...string) (logger *logrus.Logger) {
 		}
 	}
 
-	lv, exist := p.loggers.Get(name)
+	lv, exist := p.loggers.Load(name)
 
 	if exist {
 		return lv.(*logrus.Logger)
 	}
 
-	confV, exist := p.loggersConf.Get(name)
+	confV, exist := p.loggersConf.Load(name)
 	if !exist {
 		return nil
 	}
@@ -201,7 +202,7 @@ func (p *LogrusMate) Logger(loggerName ...string) (logger *logrus.Logger) {
 		return nil
 	}
 
-	p.loggers.SetIfAbsent(name, l)
+	p.loggers.LoadOrStore(name, l)
 
 	return l
 }
