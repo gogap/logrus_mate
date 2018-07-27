@@ -1,4 +1,4 @@
-package bugsnag
+package lfshook
 
 import (
 	"fmt"
