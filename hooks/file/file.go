@@ -191,15 +191,17 @@ func (w *fileLogWriter) initFd() error {
 	w.dailyOpenTime = time.Now()
 	w.dailyOpenDate = w.dailyOpenTime.Day()
 	w.maxLinesCurLines = 0
-	if w.Daily {
-		go w.dailyRotate(w.dailyOpenTime)
-	}
-	if fInfo.Size() > 0 && w.MaxLines > 0 {
-		count, err := w.lines()
-		if err != nil {
-			return err
+	if w.Rotate {
+		if w.Daily  {
+			go w.dailyRotate(w.dailyOpenTime)
 		}
-		w.maxLinesCurLines = count
+		if fInfo.Size() > 0 && w.MaxLines > 0 {
+			count, err := w.lines()
+			if err != nil {
+				return err
+			}
+			w.maxLinesCurLines = count
+		}
 	}
 	return nil
 }
