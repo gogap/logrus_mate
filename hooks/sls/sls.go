@@ -127,9 +127,6 @@ func (p *SLSHook) Fire(entry *logrus.Entry) (err error) {
 	if len(p.Config.StoreField) > 0 {
 		if specStoreName, ok := entry.Data[p.Config.StoreField].(string); ok {
 			storeName = specStoreName
-		} else {
-			err = fmt.Errorf("the fields.store is assigned, you should `.WithField(%s, YourStoreName)` by logrus, orelse you should leave configure of fields.store empty", p.Config.StoreField)
-			return
 		}
 	}
 
