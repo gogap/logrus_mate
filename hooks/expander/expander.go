@@ -31,8 +31,6 @@ func (p *ExpanderHook) Fire(entry *logrus.Entry) (err error) {
 			entry.Data["err_ctx"] = errCode.Context().String()
 
 			delete(entry.Data, logrus.ErrorKey)
-
-			entry.Message = errCode.Error()
 		}
 	}
 
