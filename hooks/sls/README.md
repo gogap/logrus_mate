@@ -2,7 +2,7 @@ sls
 ===
 
 
-### config example
+### example
 
 ```
 hooks {
@@ -28,4 +28,9 @@ hooks {
        }
 
 }
+```
+
+
+```go
+mikeLoger.WithError(e).WithField("source", "IAMSOURCE").WithField("store", "test2").Errorln("hello with gogap errors")
 ```
