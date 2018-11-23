@@ -162,6 +162,7 @@ you also could set your own config provider
 | File | `filename` `max-lines` `max-size` `daily` `max-days` `rotate` `level`|
 | BearyChat | `url` `levels` `channel` `user` `markdown` `async`|
 | [LFSHook](https://github.com/rifflock/lfshook) | `path-map { error = "logs/error.log" ... }`|
+| sls | [README](https://github.com/gogap/logrus_mate/blob/master/hooks/sls/README.md)|
 
 When we need use above hooks, we need import these package as follow:
 
