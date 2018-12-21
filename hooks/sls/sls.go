@@ -119,7 +119,7 @@ func (p *SLSHook) Levels() []logrus.Level {
 	return p.AcceptedLevels
 }
 
-// Fire -  Sent event to slack
+// Fire -  Sent event to sls
 func (p *SLSHook) Fire(entry *logrus.Entry) (err error) {
 
 	storeName := p.Config.Store
@@ -140,7 +140,9 @@ func (p *SLSHook) Fire(entry *logrus.Entry) (err error) {
 		store, _ = p.mapStores.LoadOrStore(storeName, newStore)
 	}
 
-	delete(entry.Data, p.Config.Store)
+	ignoreToSend := map[string]bool{}
+
+	ignoreToSend[p.Config.Store] = true
 
 	logStore, ok := store.(*sls.LogStore)
 	if !ok {
@@ -166,7 +168,7 @@ func (p *SLSHook) Fire(entry *logrus.Entry) (err error) {
 				strCtx = string(jsonData)
 			}
 
-			delete(entry.Data, p.Config.ContextField)
+			ignoreToSend[p.Config.ContextField] = true
 
 			slsLog.Contents = append(slsLog.Contents,
 				&sls.LogContent{
@@ -180,11 +182,15 @@ func (p *SLSHook) Fire(entry *logrus.Entry) (err error) {
 	topic := proto.String(fieldToString(entry, p.Config.TopicField))
 	source := proto.String(fieldToString(entry, p.Config.SourceField))
 
-	delete(entry.Data, p.Config.TopicField)
-	delete(entry.Data, p.Config.SourceField)
+	ignoreToSend[p.Config.TopicField] = true
+	ignoreToSend[p.Config.SourceField] = true
 
 	if len(entry.Data) > 0 {
 		for k, v := range entry.Data {
+
+			if ignoreToSend[k] {
+				continue
+			}
 
 			content := &sls.LogContent{
 				Key:   proto.String(k),
