@@ -18,7 +18,7 @@ type NewHookFunc func(config.Configuration) (hook logrus.Hook, err error)
 
 func RegisterHook(name string, newHookFunc NewHookFunc) {
 	hooksLocker.Lock()
-	hooksLocker.Unlock()
+	defer hooksLocker.Unlock()
 
 	if name == "" {
 		panic("logurs mate: Register hook name is empty")
