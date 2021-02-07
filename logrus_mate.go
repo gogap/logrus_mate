@@ -210,7 +210,7 @@ func (p *LogrusMate) Logger(loggerName ...string) (logger *logrus.Logger) {
 func (p *LogrusMate) LoggerNames() []string {
 	var keys []string
 
-	p.loggers.Range(func(key, value interface{}) bool {
+	p.loggersConf.Range(func(key, value interface{}) bool {
 		if kk, ok := key.(string); ok {
 			keys = append(keys, kk)
 		}
