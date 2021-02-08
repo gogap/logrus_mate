@@ -206,3 +206,16 @@ func (p *LogrusMate) Logger(loggerName ...string) (logger *logrus.Logger) {
 
 	return l
 }
+
+func (p *LogrusMate) LoggerNames() []string {
+	var keys []string
+
+	p.loggersConf.Range(func(key, value interface{}) bool {
+		if kk, ok := key.(string); ok {
+			keys = append(keys, kk)
+		}
+		return true
+	})
+
+	return keys
+}

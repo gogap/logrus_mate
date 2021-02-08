@@ -6,18 +6,23 @@ import (
 )
 
 type JSONFormatterConfig struct {
-	TimestampFormat string `json:"timestamp_format"`
+	TimestampFormat   string `json:"timestamp_format"`
+	DisableHTMLEscape bool   `json:"disable_html_escape"`
+	DisableTimestamp  bool   `json:"disable_timestamp"`
+	PrettyPrint       bool   `json:"pretty_print"`
 }
 
 func init() {
 	RegisterFormatter("json", NewJSONFormatter)
 }
 
-func NewJSONFormatter(config config.Configuration) (formatter logrus.Formatter, err error) {
-	var format string
+func NewJSONFormatter(config config.Configuration) (logrus.Formatter, error) {
+	jsonFormatter := &logrus.JSONFormatter{}
 	if config != nil {
-		format = config.GetString("timestamp_format")
+		jsonFormatter.TimestampFormat = config.GetString("timestamp_format", "")
+		jsonFormatter.DisableTimestamp = config.GetBoolean("disable_timestamp", false)
+		jsonFormatter.DisableHTMLEscape = config.GetBoolean("disable_html_escape", true)
+		jsonFormatter.PrettyPrint = config.GetBoolean("pretty_print", false)
 	}
-	formatter = &logrus.JSONFormatter{TimestampFormat: format}
-	return
+	return jsonFormatter, nil
 }
