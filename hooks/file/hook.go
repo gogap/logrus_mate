@@ -52,7 +52,7 @@ func NewFileHook(config config.Configuration) (hook logrus.Hook, err error) {
 		MaxSize:    config.GetInt64("max-size", 1024),
 		RotatePerm: config.GetString("rotate-perm", "0440"),
 		Perm:       config.GetString("perm", "0660"),
-		Level:      config.GetInt32("level"),
+		Level:      config.GetInt32("level", LevelDebug),
 	}
 
 	w := newFileWriter()
